@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <div class="page-title">
+        <span>THE COLLECTIONS</span>
+        <h1>Drapes for modern living.</h1>
+        <p>Natural fabrics, expressive colour and effortless construction.</p>
+    </div>
+    
+    <div class="catalog">
+        <aside class="filters" style="position: sticky; top: 100px; height: fit-content;" id="sidebar-filters">
+            <h3 style="display:flex; justify-content:space-between; align-items:center;">Filter 
+                <button type="button" class="close-mobile-filters" style="display:none;" onclick="document.getElementById('sidebar-filters').classList.remove('mobile-open')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </h3>
+            
+            <form method="GET" action="{% url 'collections' %}" id="filter-form">
+                
+                <input type="hidden" name="sort" value="{{ current_sort|default:'' }}">
+                <input type="hidden" name="fabric" value="{{ current_fabric|default:'' }}">
+                <input type="hidden" name="style" value="{{ current_style|default:'' }}">
+
+                <div class="filter-block">
+                    <label>Sort By <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></label>
+                    <button type="button" onclick="document.querySelector('input[name=sort]').value=''; this.form.submit();" class="{% if not current_sort %}selected{% endif %}"><i></i> Recommended</button>
+                    <button type="button" onclick="document.querySelector('input[name=sort]').value='newest'; this.form.submit();" class="{% if current_sort == 'newest' %}selected{% endif %}"><i></i> Newest Arrivals</button>
+                    <button type="button" onclick="document.querySelector('input[name=sort]').value='price_asc'; this.form.submit();" class="{% if current_sort == 'price_asc' %}selected{% endif %}"><i></i> Price: Low to High</button>
+                    <button type="button" onclick="document.querySelector('input[name=sort]').value='price_desc'; this.form.submit();" class="{% if current_sort == 'price_desc' %}selected{% endif %}"><i></i> Price: High to Low</button>
+                </div>
+                
+                <div class="filter-block">
+                    <label>Fabric <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></label>
+                    <button type="button" onclick="document.querySelector('input[name=fabric]').value=''; this.form.submit();" class="{% if not current_fabric %}selected{% endif %}"><i></i> All Fabrics</button>
+                    {% for f in fabrics %}
+                        <button type="button" onclick="document.querySelector('input[name=fabric]').value='{{ f }}'; this.form.submit();" class="{% if current_fabric == f %}selected{% endif %}">
+                            <i></i> {{ f|title }}
+                        </button>
+                    {% endfor %}
+                </div>
+                
+                <div class="filter-block">
+                    <label>Style <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></label>
+                    <button type="button" onclick="document.querySelector('input[name=style]').value=''; this.form.submit();" class="{% if not current_style %}selected{% endif %}"><i></i> All Styles</button>
+                    {% for s in styles %}
+                        <button type="button" onclick="document.querySelector('input[name=style]').value='{{ s }}'; this.form.submit();" class="{% if current_style == s %}selected{% endif %}">
+                            <i></i> {{ s|title }}
+                        </button>
+                    {% endfor %}
+                </div>
+                
+                <div class="filter-block">
+                    <label>Search</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Find a drape" onchange="this.form.submit()">
+                </div>
+            </form>
+        </aside>
+        
+        <div class="catalog-main">
+            <div class="mobile-filter">
+                <button onclick="document.getElementById('sidebar-filters').classList.add('mobile-open')">Filters</button>
+                <span>{{ products.count }} pieces</span>
+            </div>
+            <div class="product-grid">
+                {% for product in products %}
+                    {% include 'includes/_product_card.html' with product=product %}
+                {% empty %}
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <h3>No pieces match your filters.</h3>
+                        <a href="{% url 'collections' %}" class="btn">Clear Filters</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

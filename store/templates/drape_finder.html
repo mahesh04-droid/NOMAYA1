@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <section class="finder">
+        <div class="finder-panel">
+            <div class="steps">
+                <span class="on">1</span><span class="on">2</span><span class="on">3</span><span class="on">4</span>
+            </div>
+            <span>PERSONALISED STYLING</span>
+            <h1>Find Your<br/>Perfect Drape</h1>
+            
+            {% if not result %}
+            <p>How do you want to feel?</p>
+            <form action="{% url 'drape_finder' %}" method="POST">
+                {% csrf_token %}
+                <div class="moods">
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="mood" value="Air" style="display:none;" checked onclick="updateMood(this.value)">
+                        <div class="btn outline" style="padding: 10px;">Air</div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="mood" value="Drift" style="display:none;" onclick="updateMood(this.value)">
+                        <div class="btn outline" style="padding: 10px;">Drift</div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="mood" value="Play" style="display:none;" onclick="updateMood(this.value)">
+                        <div class="btn outline" style="padding: 10px;">Play</div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="mood" value="Mood" style="display:none;" onclick="updateMood(this.value)">
+                        <div class="btn outline" style="padding: 10px;">Mood</div>
+                    </label>
+                </div>
+                
+                <label class="range-row">
+                    <span>experience <small>ⓘ</small></span>
+                    <input type="range" name="experience" min="1" max="5" value="3">
+                </label>
+                <label class="range-row">
+                    <span>movement <small>ⓘ</small></span>
+                    <input type="range" name="movement" min="1" max="5" value="3">
+                </label>
+                <label class="range-row">
+                    <span>coverage <small>ⓘ</small></span>
+                    <input type="range" name="coverage" min="1" max="5" value="3">
+                </label>
+                <label class="range-row">
+                    <span>climate <small>ⓘ</small></span>
+                    <input type="range" name="climate" min="1" max="5" value="3">
+                </label>
+                <label class="range-row">
+                    <span>fabric weight <small>ⓘ</small></span>
+                    <input type="range" name="fabric_weight" min="1" max="5" value="3">
+                </label>
+                
+                <button type="submit" class="btn full" style="margin-top: 20px;">See My Drape</button>
+            </form>
+            {% else %}
+            <div class="recommend-result">
+                <img src="{{ result.image }}" alt="{{ result.name }}">
+                <div>
+                    <span>YOUR MATCH</span>
+                    <h3>{{ result.name }}</h3>
+                    <p>{{ result.description }}</p>
+                    <a href="{% url 'detail' result.slug %}">View the drape &rarr;</a>
+                </div>
+            </div>
+            <a href="{% url 'drape_finder' %}" class="btn outline full" style="margin-top: 20px;">Start Over</a>
+            {% endif %}
+        </div>
+        
+        <div class="finder-visual">
+            <img src="/static/images/chiffon.jpg" alt="Visual">
+            <div class="mood-card">
+                <span>MOOD <span id="display-mood">{{ mood|default:"Air" }}</span></span>
+                <h2>Calm, sophisticated,<br/>and earthy.</h2>
+                <div class="swatches"><i></i><i></i><i></i><i></i></div>
+            </div>
+        </div>
+    </section>
+</main>
+<script>
+    function updateMood(val) {
+        const display = document.getElementById('display-mood');
+        display.style.opacity = 0;
+        setTimeout(() => {
+            display.innerText = val;
+            display.style.opacity = 1;
+        }, 300);
+        
+        // Update styling of buttons
+        document.querySelectorAll('input[name="mood"]').forEach(input => {
+            if(input.checked) {
+                input.nextElementSibling.style.background = 'var(--plum)';
+                input.nextElementSibling.style.color = 'white';
+            } else {
+                input.nextElementSibling.style.background = 'transparent';
+                input.nextElementSibling.style.color = 'var(--plum)';
+            }
+        });
+    }
+    
+    // Initial call
+    document.querySelectorAll('input[name="mood"]').forEach(input => {
+        if(input.checked) updateMood(input.value);
+    });
+</script>
+{% endblock %}

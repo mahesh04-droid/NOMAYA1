@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main>
+    <section class="hero">
+        <div class="hero-copy">
+            <span>THE NOMAYA EDIT</span>
+            <h1>A Modern<br/>Take on Heritage</h1>
+            <p>Everyday drapes, thoughtfully made for movement, mood and modern life.</p>
+            <div class="actions">
+                <a class="btn" href="{% url 'collections' %}">
+                    Explore Collections 
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+                <a class="text-link" href="{% url 'drape_finder' %}">Find your drape</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="/static/images/linen.jpg" alt="NOMAYA Hero">
+        </div>
+    </section>
+    
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <span>CURATED FOR YOU</span>
+                <h2>Featured Drapes</h2>
+            </div>
+            <a href="{% url 'collections' %}">
+                View all 
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+        </div>
+        <div class="product-grid">
+            {% for product in featured_products|slice:":4" %}
+                {% include 'includes/_product_card.html' with product=product %}
+            {% empty %}
+                <p>No featured products available at this time.</p>
+            {% endfor %}
+        </div>
+    </section>
+    
+    <section class="editorial">
+        <div class="editorial-image">
+            <img src="/static/images/silk.jpg" alt="Editorial">
+        </div>
+        <div class="editorial-copy">
+            <span>THE NOMAYA PHILOSOPHY</span>
+            <h2>Dress for the way you want to feel.</h2>
+            <p>We bring the ease of contemporary dressing to the timeless language of the saree. From pre-stitched silhouettes to airy linens, every Nomaya drape is designed around the woman wearing it.</p>
+            <a class="btn dark" href="{% url 'collections' %}">
+                Our story 
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+        </div>
+    </section>
+    
+    <section class="finder-teaser">
+        <div>
+            <span>PERSONALISED STYLING</span>
+            <h2>Find Your Perfect<br/>Drape</h2>
+            <p>Tell us how you want to feel. We’ll curate a drape around your mood, movement and climate.</p>
+            <a class="btn" href="{% url 'drape_finder' %}">Start the finder</a>
+        </div>
+        <div class="finder-art">
+            <div class="swatch-grid"><i></i><i></i><i></i><i></i></div>
+            <p>MOOD INDIGO</p>
+            <strong>Calm, sophisticated,<br/>and earthy.</strong>
+        </div>
+    </section>
+</main>
+{% endblock %}

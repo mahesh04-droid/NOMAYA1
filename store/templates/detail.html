@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <div class="product-detail">
+        <div class="gallery">
+            <img src="{{ product.image }}" alt="{{ product.name }}" id="main-image">
+            <div>
+                <button onclick="document.getElementById('main-image').src='{{ product.image }}'">
+                    <img src="{{ product.image }}" alt="Thumbnail">
+                </button>
+                {% if product.secondary_image %}
+                <button onclick="document.getElementById('main-image').src='{{ product.secondary_image }}'">
+                    <img src="{{ product.secondary_image }}" alt="Thumbnail">
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="product-info">
+            <span>THE NOMAYA EDIT &middot; {{ product.fabric }}</span>
+            <h1>{{ product.name }}</h1>
+            <strong class="price">₹{{ product.price|floatformat:"0" }}</strong>
+            <p>{{ product.description }}</p>
+            
+            <hr/>
+            <h4>Choose your drape style</h4>
+            <div class="segmented">
+                <button class="{% if product.style == 'pre-stitched' %}selected{% endif %}">Pre-stitched</button>
+                <button class="{% if product.style != 'pre-stitched' %}selected{% endif %}">Unstitched</button>
+            </div>
+            
+            <div class="mood-note">
+                <span>MOOD</span>
+                <h3>{{ product.color }}</h3>
+                <p>Quietly expressive, effortless and made to move.</p>
+            </div>
+            
+            <form action="{% url 'cart_add' product.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn full">Add to Bag</button>
+            </form>
+            <a class="btn outline full" href="{% url 'draping_studio' %}" style="margin-top: 10px; text-align: center;">See my drape</a>
+            
+            <div class="accordion">
+                <button onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
+                    <span>Fabric & Care</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </button>
+                <p style="display: none;">Hand-finished natural fabric. Cool wash or dry clean depending on the collection.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div style="max-width: 1200px; margin: 60px auto; padding: 0 5vw;">
+        <hr style="border:none; border-top:1px solid #eaeaea; margin-bottom: 40px;"/>
+        <h2 style="font-size: 24px; margin-bottom: 20px;">Customer Reviews</h2>
+        <div style="display:flex; gap:40px; flex-wrap:wrap;">
+            
+            <div style="flex:1; min-width:300px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
+                    <strong style="font-size:48px;">{{ product.average_rating|floatformat:"1" }}</strong>
+                    <div>
+                        <div style="display:flex; gap:2px;">
+                            {% for i in "12345" %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="{% if forloop.counter <= product.average_rating %}#FFB800{% else %}#eee{% endif %}" stroke="{% if forloop.counter <= product.average_rating %}#FFB800{% else %}#eee{% endif %}" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            {% endfor %}
+                        </div>
+                        <span style="font-size:12px; color:#666;">Based on {{ product.review_count }} reviews</span>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                <form method="POST" style="background:#f9f9f9; padding:20px; border-radius:8px;">
+                    {% csrf_token %}
+                    <h4 style="margin:0 0 10px;">Write a review</h4>
+                    <select name="rating" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd;">
+                        <option value="5">5 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="2">2 Stars</option>
+                        <option value="1">1 Star</option>
+                    </select>
+                    <textarea name="comment" placeholder="What did you think about this drape?" style="width:100%; padding:10px; border:1px solid #ddd; margin-bottom:10px; min-height:80px; resize:vertical;"></textarea>
+                    <button type="submit" class="btn" style="width:100%;">Submit Review</button>
+                </form>
+                {% else %}
+                <div style="background:#f9f9f9; padding:20px; border-radius:8px; text-align:center;">
+                    <p style="margin:0 0 10px; font-size:14px; color:#555;">Please log in to write a review.</p>
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn outline" style="padding:10px 20px;">Log in</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="flex:2; min-width:300px;">
+                {% for review in product.reviews.all %}
+                <div style="border-bottom:1px solid #eaeaea; padding-bottom:20px; margin-bottom:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong style="font-size:14px;">{{ review.user.username }}</strong>
+                        <span style="font-size:12px; color:#888;">{{ review.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div style="display:flex; gap:2px; margin-bottom:10px;">
+                        {% for i in "12345" %}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="{% if forloop.counter <= review.rating %}#FFB800{% else %}#eee{% endif %}" stroke="{% if forloop.counter <= review.rating %}#FFB800{% else %}#eee{% endif %}" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        {% endfor %}
+                    </div>
+                    <p style="font-size:14px; line-height:1.6; color:#444; margin:0;">{{ review.comment }}</p>
+                </div>
+                {% empty %}
+                <p style="color:#777; font-style:italic;">No reviews yet. Be the first!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Products -->
+    {% if similar_products %}
+    <div style="max-width: 1200px; margin: 60px auto; padding: 0 5vw;">
+        <h2 style="font-size: 24px; margin-bottom: 20px;">You May Also Like</h2>
+        <div class="product-grid">
+            {% for product in similar_products %}
+                {% include 'includes/_product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</main>
+{% endblock %}

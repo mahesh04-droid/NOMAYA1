@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <div class="page-title compact">
+        <span>YOUR EDIT</span>
+        <h1>Your Bag</h1>
+    </div>
+    
+    <div class="cart-layout">
+        <div>
+            {% if not items %}
+                <div class="empty">
+                    <h2>Your bag is waiting.</h2>
+                    <a class="btn" href="{% url 'collections' %}">Explore drapes</a>
+                </div>
+            {% else %}
+                {% for item in items %}
+                    <div class="cart-item">
+                        <img src="{{ item.product.image }}" alt="{{ item.product.name }}">
+                        <div>
+                            <h3>{{ item.product.name }}</h3>
+                            <p>{{ item.product.fabric }} &middot; {{ item.product.style }}</p>
+                            <div class="qty">
+                                <form action="{% url 'cart_remove' item.product.id %}" method="POST" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
+                                    </button>
+                                </form>
+                                {{ item.quantity }}
+                                <form action="{% url 'cart_add' item.product.id %}" method="POST" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <strong>₹{{ item.subtotal|floatformat:"0" }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <aside class="summary">
+            <span>ORDER SUMMARY</span>
+            
+            <form action="{% url 'apply_coupon' %}" method="POST" style="margin: 20px 0; display:flex; gap:10px;">
+                {% csrf_token %}
+                <input type="text" name="code" placeholder="Promo code" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:4px;" value="{{ coupon.code|default:'' }}">
+                <button type="submit" class="btn" style="padding:10px 15px;">Apply</button>
+            </form>
+            
+            {% if coupon %}
+            <div style="font-size:12px; color:green; margin-top:-10px; margin-bottom:15px;">
+                Code '{{ coupon.code }}' applied (-{{ coupon.discount_percentage }}%)
+            </div>
+            {% endif %}
+            
+            <div>
+                <span>Subtotal</span>
+                <strong>₹{{ total|floatformat:"0" }}</strong>
+            </div>
+            {% if discount > 0 %}
+            <div style="color: green;">
+                <span>Discount</span>
+                <strong>-₹{{ discount|floatformat:"0" }}</strong>
+            </div>
+            {% endif %}
+            <div>
+                <span>Shipping</span>
+                <strong>{% if shipping == 0 %}Complimentary{% else %}₹{{ shipping }}{% endif %}</strong>
+            </div>
+            <hr/>
+            <div>
+                <span>Total</span>
+                <strong>₹{{ grand_total|floatformat:"0" }}</strong>
+            </div>
+            <a href="{% url 'checkout' %}" class="btn full">Proceed to Checkout</a>
+        </aside>
+    </div>
+</main>
+{% endblock %}

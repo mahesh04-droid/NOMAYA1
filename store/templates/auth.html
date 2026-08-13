@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <section class="auth">
+        <div class="auth-form" id="auth-container">
+            <a class="logo" href="{% url 'home' %}">NOMAYA<span>⌁✧</span></a>
+            <span id="auth-badge">WELCOME TO NOMAYA</span>
+            <h1 id="auth-title">Sign In or Create Account</h1>
+            <p id="auth-subtitle">Enter your email address or phone number to continue.</p>
+            
+            <div id="error-msg" class="error" style="display: none; margin-bottom: 15px;"></div>
+            <div id="success-msg" style="display: none; color: #2e6040; background: #e2f0e7; padding: 10px; font-size: 11px; margin-bottom: 15px;"></div>
+            
+            <!-- STEP 1: IDENTIFIER -->
+            <form id="step1-form" onsubmit="event.preventDefault(); checkIdentifier();">
+                {% csrf_token %}
+                <input id="identifier-input" placeholder="Email or Phone Number" required>
+                <button type="submit" class="btn full" id="step1-btn">Continue</button>
+                <div class="or">or</div>
+                <button type="button" class="google">G &nbsp; Continue with Google</button>
+            </form>
+            
+            <!-- STEP 2: AUTH METHOD (EXISTING USER) -->
+            <form id="step2-form" style="display:none;" onsubmit="event.preventDefault(); verifyPassword();">
+                <input id="password-input" type="password" placeholder="Password" required>
+                <button type="submit" class="btn full" id="pwd-btn">Log In</button>
+                <div class="or">or</div>
+                <button type="button" class="btn outline full" onclick="requestOTP()">Get OTP instead</button>
+                <button type="button" class="text-link" style="margin-top:20px; border:0; text-align:left;" onclick="resetAuth()">&larr; Back</button>
+            </form>
+
+            <!-- STEP 4: SIGNUP SETUP (NEW USER) -->
+            <form id="step4-form" style="display:none;" onsubmit="event.preventDefault(); setupNewUser();">
+                <input id="name-input" placeholder="Your Name" required>
+                <input id="contact-input" placeholder="Missing contact (Email/Phone)" required>
+                <button type="submit" class="btn full" id="setup-btn">Send OTP & Register</button>
+                <button type="button" class="text-link" style="margin-top:20px; border:0; text-align:left;" onclick="resetAuth()">&larr; Back</button>
+            </form>
+            
+            <!-- STEP 3: OTP VERIFICATION -->
+            <form id="step3-form" style="display:none;" onsubmit="event.preventDefault(); verifyOTP();">
+                <input id="otp-input" placeholder="Enter 6-digit OTP" required maxlength="6">
+                <button type="submit" class="btn full" id="otp-btn">Verify & Continue</button>
+                <button type="button" class="text-link" style="margin-top:20px; border:0; text-align:left;" onclick="resetAuth()">&larr; Back</button>
+            </form>
+
+        </div>
+        <div class="auth-image">
+            <img src="/static/images/cotton.jpg" alt="NOMAYA Auth">
+        </div>
+    </section>
+</main>
+
+<script>
+    let currentIdentifier = '';
+    let isEmail = false;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showError(msg) {
+        const err = document.getElementById('error-msg');
+        err.textContent = msg;
+        err.style.display = 'block';
+    }
+    function hideError() {
+        document.getElementById('error-msg').style.display = 'none';
+        document.getElementById('success-msg').style.display = 'none';
+    }
+    function showSuccess(msg) {
+        const succ = document.getElementById('success-msg');
+        succ.textContent = msg;
+        succ.style.display = 'block';
+    }
+
+    function showStep(step) {
+        hideError();
+        document.getElementById('step1-form').style.display = 'none';
+        document.getElementById('step2-form').style.display = 'none';
+        document.getElementById('step3-form').style.display = 'none';
+        document.getElementById('step4-form').style.display = 'none';
+        
+        if (step === 1) {
+            document.getElementById('auth-title').innerText = "Sign In or Create Account";
+            document.getElementById('auth-subtitle').innerText = "Enter your email address or phone number to continue.";
+            document.getElementById('step1-form').style.display = 'block';
+        } else if (step === 2) {
+            document.getElementById('auth-title').innerText = "Welcome Back";
+            document.getElementById('auth-subtitle').innerText = `Enter password for ${currentIdentifier}`;
+            document.getElementById('step2-form').style.display = 'block';
+        } else if (step === 3) {
+            document.getElementById('auth-title').innerText = "Verify OTP";
+            document.getElementById('auth-subtitle').innerText = `We've sent a 6-digit code to ${currentIdentifier}`;
+            document.getElementById('step3-form').style.display = 'block';
+        } else if (step === 4) {
+            document.getElementById('auth-title').innerText = "Create Account";
+            document.getElementById('auth-subtitle').innerText = "Just a few more details to set up your account.";
+            document.getElementById('step4-form').style.display = 'block';
+            
+            const contactInput = document.getElementById('contact-input');
+            if (isEmail) {
+                contactInput.placeholder = "Phone Number";
+                contactInput.type = "tel";
+            } else {
+                contactInput.placeholder = "Email Address";
+                contactInput.type = "email";
+            }
+        }
+    }
+
+    function resetAuth() {
+        currentIdentifier = '';
+        showStep(1);
+    }
+
+    function checkIdentifier() {
+        hideError();
+        const ident = document.getElementById('identifier-input').value.trim();
+        if (!ident) return;
+        currentIdentifier = ident;
+        isEmail = ident.includes('@');
+        
+        const btn = document.getElementById('step1-btn');
+        btn.innerText = "Checking...";
+        btn.disabled = true;
+
+        fetch('/auth/check/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
+            body: JSON.stringify({identifier: currentIdentifier})
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.innerText = "Continue";
+            btn.disabled = false;
+            if (data.exists) {
+                showStep(2); // Ask for password or OTP
+            } else {
+                showStep(4); // Setup new user
+            }
+        })
+        .catch(err => {
+            btn.innerText = "Continue";
+            btn.disabled = false;
+            showError("Something went wrong.");
+        });
+    }
+
+    function requestOTP() {
+        hideError();
+        fetch('/auth/otp/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
+            body: JSON.stringify({identifier: currentIdentifier})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'sent') {
+                showStep(3);
+                showSuccess("OTP sent! (Dev Mode: Check terminal)");
+            } else {
+                showError("Could not send OTP.");
+            }
+        });
+    }
+
+    function setupNewUser() {
+        // Send OTP directly
+        requestOTP();
+    }
+
+    function verifyPassword() {
+        hideError();
+        const pwd = document.getElementById('password-input').value;
+        const btn = document.getElementById('pwd-btn');
+        btn.innerText = "Verifying...";
+        btn.disabled = true;
+
+        fetch('/auth/verify/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
+            body: JSON.stringify({identifier: currentIdentifier, method: 'password', password: pwd})
+        })
+        .then(r => {
+            if (!r.ok) return r.json().then(err => { throw new Error(err.error) });
+            return r.json();
+        })
+        .then(data => {
+            if (data.status === 'success') window.location.href = '/profile/';
+        })
+        .catch(err => {
+            btn.innerText = "Log In";
+            btn.disabled = false;
+            showError(err.message || "Invalid credentials");
+        });
+    }
+
+    function verifyOTP() {
+        hideError();
+        const otp = document.getElementById('otp-input').value;
+        const name = document.getElementById('name-input').value;
+        const contact = document.getElementById('contact-input').value;
+        const btn = document.getElementById('otp-btn');
+        btn.innerText = "Verifying...";
+        btn.disabled = true;
+
+        fetch('/auth/verify/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
+            body: JSON.stringify({identifier: currentIdentifier, method: 'otp', otp: otp, name: name, contact: contact})
+        })
+        .then(r => {
+            if (!r.ok) return r.json().then(err => { throw new Error(err.error) });
+            return r.json();
+        })
+        .then(data => {
+            if (data.status === 'success') window.location.href = '/profile/';
+        })
+        .catch(err => {
+            btn.innerText = "Verify & Continue";
+            btn.disabled = false;
+            showError(err.message || "Invalid OTP");
+        });
+    }
+</script>
+{% endblock %}

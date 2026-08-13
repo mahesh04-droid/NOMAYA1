@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main>
+    <div class="page-title compact">
+        <span>MY NOMAYA</span>
+        <h1>Orders</h1>
+    </div>
+    
+    <div class="dashboard">
+        {% include 'includes/_dashboard_sidebar.html' %}
+        <section>
+            <div class="orders-list" style="padding: 0;">
+                {% if orders %}
+                    {% for o in orders %}
+                    <div class="order-card">
+                        <div>
+                            <span>ORDER #{{ o.id }}</span>
+                            <h3>{{ o.get_status_display }}</h3>
+                            <p>{{ o.created_at|date:"d/m/Y" }} &middot; {{ o.items.count }} pieces</p>
+                        </div>
+                        <strong>₹{{ o.total|floatformat:"0" }}</strong>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">
+                        <h2>No orders yet.</h2>
+                        <a class="btn" href="{% url 'collections' %}">Start shopping</a>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

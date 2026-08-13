@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <div class="dashboard">
+        {% include 'includes/_dashboard_sidebar.html' %}
+        <section>
+            <div class="dash-head">
+                <div>
+                    <span>CUSTOMER PROFILE</span>
+                    <h1>{{ user.first_name|default:"Welcome back" }}</h1>
+                    <p>Curate your next drape around your mood.</p>
+                </div>
+                <form action="{% url 'logout' %}" method="POST" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit">Log out</button>
+                </form>
+            </div>
+            
+            <div class="stats">
+                <div><span>ORDERS</span><strong>{{ orders_count }}</strong></div>
+                <div><span>STYLE</span><strong>Indigo</strong></div>
+                <div><span>FAVOURITE FABRIC</span><strong>Linen</strong></div>
+            </div>
+            
+            <div class="profile-grid">
+                <div class="chart-card">
+                    <span>DRAPE MOODS</span>
+                    <h2>Your visual rhythm</h2>
+                    <div class="fake-chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                    <div class="chart-labels"><span>Air</span><span>Drift</span><span>Mood</span><span>Play</span></div>
+                </div>
+                <div class="recommend-card">
+                    <span>PERSONALISED</span>
+                    <h2>Find your next drape.</h2>
+                    <p>Our styling guide learns from your choices and suggests silhouettes that feel like you.</p>
+                    <a class="btn" href="{% url 'drape_finder' %}">Discover &rarr;</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

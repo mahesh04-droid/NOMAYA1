@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NOMAYA | Wear life lightly{% endblock %}</title>
+    <meta name="description" content="Contemporary Indian womenswear built around softness, movement and self-expression.">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
+</head>
+<body>
+    <header class="nav glass">
+        <a class="logo" href="{% url 'home' %}">NOMAYA<span>⌁✧</span></a>
+        <nav class="desktop-nav">
+            <a href="{% url 'collections' %}">Collections</a>
+            <a href="{% url 'draping_studio' %}">Draping Studio</a>
+            <a href="{% url 'drape_finder' %}">Drape Finder</a>
+        </nav>
+        <div class="nav-actions">
+            <button aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+            <a aria-label="Profile" href="{% if user.is_authenticated %}{% url 'profile' %}{% else %}{% url 'auth' %}{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            </a>
+            <a class="bag-icon" href="{% url 'cart_view' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </a>
+            <button class="mobile-only" onclick="document.getElementById('mobile-drawer').classList.add('open')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div id="mobile-drawer" class="drawer">
+        <div class="drawer-header">
+            <a class="logo" href="{% url 'home' %}">NOMAYA</a>
+            <button onclick="document.getElementById('mobile-drawer').classList.remove('open')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <nav>
+            <a href="{% url 'collections' %}">Collections</a>
+            <a href="{% url 'draping_studio' %}">Draping Studio</a>
+            <a href="{% url 'drape_finder' %}">Drape Finder</a>
+            <a href="{% url 'cart_view' %}">Bag</a>
+            <a href="{% if user.is_authenticated %}{% url 'profile' %}{% else %}{% url 'auth' %}{% endif %}">Account</a>
+        </nav>
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+        <div>
+            <a class="logo" href="{% url 'home' %}">NOMAYA<span>⌁✧</span></a>
+            <p>Heritage reimagined. Comfort redefined.</p>
+        </div>
+        <div>
+            <h4>Explore</h4>
+            <a href="{% url 'collections' %}">Collections</a>
+            <a href="{% url 'draping_studio' %}">Draping Studio</a>
+            <a href="{% url 'drape_finder' %}">Drape Finder</a>
+        </div>
+        <div>
+            <h4>Need help?</h4>
+            <span>care@nomaya.local</span>
+            <span>Mon–Sat · 10am–6pm</span>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll Reveal Animation via IntersectionObserver
+        document.addEventListener('DOMContentLoaded', () => {
+            // Force reveal everything if JS is slow or errors out
+            setTimeout(() => {
+                document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+            }, 1000);
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+            
+            // Add reveal class and observe
+            document.querySelectorAll('section, .product-card, .editorial, .finder-teaser').forEach(el => {
+                el.classList.add('reveal');
+                observer.observe(el);
+            });
+        });
+    </script>
+    <script>
+        function toggleWishlist(productId, btn) {
+            fetch(`/wishlist/toggle/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(data.status === 'added') {
+                    btn.querySelector('svg').style.fill = 'currentColor';
+                } else if(data.status === 'removed') {
+                    btn.querySelector('svg').style.fill = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
