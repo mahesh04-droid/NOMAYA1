@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nomaya-store
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn nomaya.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
