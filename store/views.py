@@ -192,7 +192,7 @@ def auth_request_otp(request):
         data = json.loads(request.body)
         identifier = data.get('identifier', '').strip().lower()
         otp = send_otp(identifier)
-        return JsonResponse({'status': 'sent'})
+        return JsonResponse({'status': 'sent', 'dev_otp': otp})
     return JsonResponse({'error': 'Invalid'}, status=400)
 
 def auth_verify(request):

@@ -368,7 +368,11 @@
         .then(data => {
             if (data.status === 'sent') {
                 showStep(3);
-                showSuccess("OTP sent! (Dev Mode: Check terminal)");
+                let msg = "OTP sent!";
+                if (data.dev_otp) {
+                    msg += " (Dev Mode OTP: " + data.dev_otp + ")";
+                }
+                showSuccess(msg);
             } else {
                 showError("Could not send OTP.");
             }
