@@ -6,7 +6,7 @@ class Product(models.Model):
     STYLES=[('pre-stitched','Pre-stitched'),('classic','Classic'),('easy','Easy Drape')]
     name=models.CharField(max_length=180); slug=models.SlugField(unique=True); description=models.TextField(); price=models.DecimalField(max_digits=10,decimal_places=2)
     fabric=models.CharField(max_length=30,choices=FABRICS); color=models.CharField(max_length=40); style=models.CharField(max_length=30,choices=STYLES)
-    image=models.URLField(); secondary_image=models.URLField(blank=True); stock=models.PositiveIntegerField(default=0); featured=models.BooleanField(default=False)
+    image=models.URLField(default=""); secondary_image=models.URLField(blank=True, default=""); stock=models.PositiveIntegerField(default=0); featured=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.name
     
@@ -66,3 +66,13 @@ class OTPVerification(models.Model):
     
     def __str__(self):
         return f"OTP for {self.identifier}"
+
+class InventoryLog(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory_logs')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity_changed = models.IntegerField()
+    reason = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.product.name} ({self.quantity_changed}) - {self.reason}"

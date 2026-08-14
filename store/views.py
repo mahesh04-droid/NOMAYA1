@@ -11,7 +11,8 @@ import random
 import json
 import stripe
 
-from .models import Product, Review, Coupon, Order, Wishlist, OrderItem, DrapeRecommendation, UserProfile, OTPVerification
+from .models import Product, Review, Coupon, Order, Wishlist, OrderItem, DrapeRecommendation, UserProfile, OTPVerification, InventoryLog
+from django.db import transaction
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -357,8 +358,24 @@ def checkout_view(request):
 @login_required
 def checkout_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    order.status = 'paid'
-    order.save()
+    if order.status != 'paid':
+        with transaction.atomic():
+            order.status = 'paid'
+            order.save()
+            for item in order.items.all():
+                if item.product.stock >= item.quantity:
+                    item.product.stock -= item.quantity
+                else:
+                    item.product.stock = 0
+                item.product.save()
+                
+                InventoryLog.objects.create(
+                    product=item.product,
+                    user=request.user,
+                    quantity_changed=-item.quantity,
+                    reason=f"Sold - Order #{order.id}"
+                )
+    
     request.session['cart'] = {}
     request.session.pop('coupon_id', None)
     return render(request, 'order_success.html', {'order': order})

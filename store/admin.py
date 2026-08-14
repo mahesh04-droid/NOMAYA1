@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Wishlist, Order, OrderItem, DrapeRecommendation
+from .models import Product, Wishlist, Order, OrderItem, DrapeRecommendation, InventoryLog
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -7,6 +7,40 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('fabric', 'style', 'featured')
     search_fields = ('name', 'color')
     prepopulated_fields = {'slug': ('name',)}
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            old_obj = Product.objects.get(pk=obj.pk)
+            diff = obj.stock - old_obj.stock
+            if diff != 0:
+                super().save_model(request, obj, form, change)
+                InventoryLog.objects.create(
+                    product=obj,
+                    user=request.user,
+                    quantity_changed=diff,
+                    reason="Manual admin update"
+                )
+                return
+        elif obj.stock > 0:
+            super().save_model(request, obj, form, change)
+            InventoryLog.objects.create(
+                product=obj,
+                user=request.user,
+                quantity_changed=obj.stock,
+                reason="Initial stock setup"
+            )
+            return
+        super().save_model(request, obj, form, change)
+
+@admin.register(InventoryLog)
+class InventoryLogAdmin(admin.ModelAdmin):
+    list_display = ('product', 'quantity_changed', 'reason', 'user', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('product__name', 'reason', 'user__username')
+    readonly_fields = ('product', 'quantity_changed', 'reason', 'user', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
