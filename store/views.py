@@ -140,7 +140,8 @@ def cart_view(request):
     if coupon_id:
         try:
             coupon = Coupon.objects.get(id=coupon_id, active=True)
-            discount = total * (coupon.discount_percentage / 100)
+            from decimal import Decimal
+            discount = total * (Decimal(coupon.discount_percentage) / Decimal('100'))
         except Coupon.DoesNotExist:
             pass
             
@@ -350,7 +351,8 @@ def checkout_view(request):
     if coupon_id:
         try:
             coupon = Coupon.objects.get(id=coupon_id, active=True)
-            discount = total * (coupon.discount_percentage / 100)
+            from decimal import Decimal
+            discount = total * (Decimal(coupon.discount_percentage) / Decimal('100'))
             
             # Apply discount as a line item if possible, or just update total
             line_items.append({
