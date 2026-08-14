@@ -1,56 +1,255 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<main>
-    <section class="auth">
-        <div class="auth-form" id="auth-container">
-            <a class="logo" href="{% url 'home' %}">NOMAYA<span>⌁✧</span></a>
-            <span id="auth-badge">WELCOME TO NOMAYA</span>
-            <h1 id="auth-title">Sign In or Create Account</h1>
-            <p id="auth-subtitle">Enter your email address or phone number to continue.</p>
+<style>
+    /* Myntra Style Auth overrides */
+    body {
+        background-color: #ffe6eb; /* Soft Myntra pinkish background for page */
+    }
+    .myntra-auth-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 150px);
+        padding: 40px 20px;
+    }
+    .myntra-auth-card {
+        background: #fff;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 12px 0 rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .myntra-auth-banner {
+        width: 100%;
+        height: 180px;
+        background-image: url('https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&q=80&w=600');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+    .myntra-auth-banner-overlay {
+        position: absolute;
+        bottom: 15px;
+        left: 20px;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .myntra-auth-banner-overlay h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+    .myntra-auth-banner-overlay p {
+        margin: 5px 0 0;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .myntra-auth-content {
+        padding: 30px 40px;
+    }
+    .myntra-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #282c3f;
+        margin-bottom: 25px;
+    }
+    .myntra-title span {
+        font-weight: 400;
+        font-size: 14px;
+        color: #535766;
+        display: block;
+        margin-top: 5px;
+    }
+    .myntra-input-group {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .myntra-input {
+        width: 100%;
+        padding: 15px 15px 5px 15px;
+        border: 1px solid #d4d5d9;
+        font-size: 14px;
+        color: #282c3f;
+        outline: none;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+    }
+    .myntra-input:focus {
+        border-color: #282c3f;
+    }
+    .myntra-label {
+        position: absolute;
+        left: 15px;
+        top: 15px;
+        font-size: 14px;
+        color: #94969f;
+        transition: 0.2s ease all;
+        pointer-events: none;
+    }
+    .myntra-input:focus ~ .myntra-label,
+    .myntra-input:not(:placeholder-shown) ~ .myntra-label {
+        top: 5px;
+        font-size: 11px;
+        color: #535766;
+    }
+    .myntra-terms {
+        font-size: 12px;
+        color: #282c3f;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    .myntra-terms a {
+        color: #ff3f6c;
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .myntra-btn {
+        width: 100%;
+        background: #ff3f6c;
+        color: white;
+        border: none;
+        padding: 14px;
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .myntra-btn:hover {
+        background: #f23661;
+    }
+    .myntra-btn:disabled {
+        background: #f396ad;
+        cursor: not-allowed;
+    }
+    .myntra-divider {
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+    }
+    .myntra-divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: #eaeaec;
+        z-index: 1;
+    }
+    .myntra-divider span {
+        background: #fff;
+        padding: 0 15px;
+        color: #7e818c;
+        font-size: 14px;
+        position: relative;
+        z-index: 2;
+    }
+    .myntra-google {
+        width: 100%;
+        background: white;
+        color: #282c3f;
+        border: 1px solid #d4d5d9;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: border 0.2s;
+    }
+    .myntra-google:hover {
+        border-color: #282c3f;
+    }
+    .myntra-back {
+        background: none;
+        border: none;
+        color: #ff3f6c;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 0;
+        margin-top: 20px;
+        font-size: 14px;
+    }
+    /* Hide nav to give an app-like focused checkout experience */
+    .nav {
+        border-bottom: 1px solid #f5f5f6;
+    }
+    .nav .desktop-nav, .nav .nav-actions {
+        display: none !important;
+    }
+</style>
+
+<div class="myntra-auth-page">
+    <div class="myntra-auth-card">
+        <div class="myntra-auth-banner">
+            <div class="myntra-auth-banner-overlay">
+                <h2>Flat ₹500 OFF</h2>
+                <p>On your first premium drape</p>
+            </div>
+        </div>
+        
+        <div class="myntra-auth-content">
+            <h1 id="auth-title" class="myntra-title">Login <span style="display:inline; color:#282c3f; font-size:20px;">or</span> Signup</h1>
             
-            <div id="error-msg" class="error" style="display: none; margin-bottom: 15px;"></div>
-            <div id="success-msg" style="display: none; color: #2e6040; background: #e2f0e7; padding: 10px; font-size: 11px; margin-bottom: 15px;"></div>
+            <div id="error-msg" style="display: none; color: #ff3f6c; font-size: 12px; margin-bottom: 15px; font-weight: 500;"></div>
+            <div id="success-msg" style="display: none; color: #03a685; font-size: 12px; margin-bottom: 15px; font-weight: 500;"></div>
             
             <!-- STEP 1: IDENTIFIER -->
             <form id="step1-form" onsubmit="event.preventDefault(); checkIdentifier();">
                 {% csrf_token %}
-                <input id="identifier-input" placeholder="Email or Phone Number" required>
-                <button type="submit" class="btn full" id="step1-btn">Continue</button>
-                <div class="or">or</div>
-                <button type="button" class="google">G &nbsp; Continue with Google</button>
+                <div class="myntra-input-group">
+                    <input id="identifier-input" class="myntra-input" type="text" placeholder=" " required>
+                    <label class="myntra-label">Mobile Number or Email</label>
+                </div>
+                <div class="myntra-terms">
+                    By continuing, I agree to the <a href="#">Terms of Use</a> & <a href="#">Privacy Policy</a>
+                </div>
+                <button type="submit" class="myntra-btn" id="step1-btn">Continue</button>
+                <div class="myntra-divider"><span>or</span></div>
+                <button type="button" class="myntra-google">G &nbsp; Continue with Google</button>
             </form>
             
             <!-- STEP 2: AUTH METHOD (EXISTING USER) -->
             <form id="step2-form" style="display:none;" onsubmit="event.preventDefault(); verifyPassword();">
-                <input id="password-input" type="password" placeholder="Password" required>
-                <button type="submit" class="btn full" id="pwd-btn">Log In</button>
-                <div class="or">or</div>
-                <button type="button" class="btn outline full" onclick="requestOTP()">Get OTP instead</button>
-                <button type="button" class="text-link" style="margin-top:20px; border:0; text-align:left;" onclick="resetAuth()">&larr; Back</button>
+                <p style="font-size: 14px; color: #535766; margin-bottom: 20px;">Welcome back, <b id="display-ident" style="color:#282c3f;"></b></p>
+                <div class="myntra-input-group">
+                    <input id="password-input" class="myntra-input" type="password" placeholder=" " required>
+                    <label class="myntra-label">Password</label>
+                </div>
+                <button type="submit" class="myntra-btn" id="pwd-btn">Log In</button>
+                <div class="myntra-divider"><span>or</span></div>
+                <button type="button" class="myntra-google" onclick="requestOTP()">Get OTP instead</button>
+                <button type="button" class="myntra-back" onclick="resetAuth()">&larr; Back to Email/Phone</button>
             </form>
 
             <!-- STEP 4: SIGNUP SETUP (NEW USER) -->
             <form id="step4-form" style="display:none;" onsubmit="event.preventDefault(); setupNewUser();">
-                <input id="name-input" placeholder="Your Name" required>
-                <input id="contact-input" placeholder="Missing contact (Email/Phone)" required>
-                <button type="submit" class="btn full" id="setup-btn">Send OTP & Register</button>
-                <button type="button" class="text-link" style="margin-top:20px; border:0; text-align:left;" onclick="resetAuth()">&larr; Back</button>
+                <div class="myntra-input-group">
+                    <input id="name-input" class="myntra-input" type="text" placeholder=" " required>
+                    <label class="myntra-label">Full Name</label>
+                </div>
+                <div class="myntra-input-group">
+                    <input id="contact-input" class="myntra-input" type="text" placeholder=" " required>
+                    <label class="myntra-label" id="contact-label">Email/Phone</label>
+                </div>
+                <button type="submit" class="myntra-btn" id="setup-btn">Send OTP & Register</button>
+                <button type="button" class="myntra-back" onclick="resetAuth()">&larr; Back</button>
             </form>
             
             <!-- STEP 3: OTP VERIFICATION -->
             <form id="step3-form" style="display:none;" onsubmit="event.preventDefault(); verifyOTP();">
-                <input id="otp-input" placeholder="Enter 6-digit OTP" required maxlength="6">
-                <button type="submit" class="btn full" id="otp-btn">Verify & Continue</button>
-                <button type="button" class="text-link" style="margin-top:20px; border:0; text-align:left;" onclick="resetAuth()">&larr; Back</button>
+                <p style="font-size: 14px; color: #535766; margin-bottom: 20px;">We've sent a 6-digit code to <b id="otp-ident" style="color:#282c3f;"></b></p>
+                <div class="myntra-input-group">
+                    <input id="otp-input" class="myntra-input" type="text" placeholder=" " required maxlength="6" autocomplete="one-time-code">
+                    <label class="myntra-label">Enter 6-digit OTP</label>
+                </div>
+                <button type="submit" class="myntra-btn" id="otp-btn">Verify & Continue</button>
+                <button type="button" class="myntra-back" onclick="resetAuth()">&larr; Change Mobile/Email</button>
             </form>
-
         </div>
-        <div class="auth-image">
-            <img src="/static/images/cotton.jpg" alt="NOMAYA Auth">
-        </div>
-    </section>
-</main>
+    </div>
+</div>
 
 <script>
     let currentIdentifier = '';
@@ -94,28 +293,27 @@
         document.getElementById('step4-form').style.display = 'none';
         
         if (step === 1) {
-            document.getElementById('auth-title').innerText = "Sign In or Create Account";
-            document.getElementById('auth-subtitle').innerText = "Enter your email address or phone number to continue.";
+            document.getElementById('auth-title').innerHTML = 'Login <span style="display:inline; color:#282c3f; font-size:20px;">or</span> Signup';
             document.getElementById('step1-form').style.display = 'block';
         } else if (step === 2) {
             document.getElementById('auth-title').innerText = "Welcome Back";
-            document.getElementById('auth-subtitle').innerText = `Enter password for ${currentIdentifier}`;
+            document.getElementById('display-ident').innerText = currentIdentifier;
             document.getElementById('step2-form').style.display = 'block';
         } else if (step === 3) {
             document.getElementById('auth-title').innerText = "Verify OTP";
-            document.getElementById('auth-subtitle').innerText = `We've sent a 6-digit code to ${currentIdentifier}`;
+            document.getElementById('otp-ident').innerText = currentIdentifier;
             document.getElementById('step3-form').style.display = 'block';
         } else if (step === 4) {
             document.getElementById('auth-title').innerText = "Create Account";
-            document.getElementById('auth-subtitle').innerText = "Just a few more details to set up your account.";
             document.getElementById('step4-form').style.display = 'block';
             
             const contactInput = document.getElementById('contact-input');
+            const contactLabel = document.getElementById('contact-label');
             if (isEmail) {
-                contactInput.placeholder = "Phone Number";
+                contactLabel.innerText = "Phone Number";
                 contactInput.type = "tel";
             } else {
-                contactInput.placeholder = "Email Address";
+                contactLabel.innerText = "Email Address";
                 contactInput.type = "email";
             }
         }
@@ -178,7 +376,6 @@
     }
 
     function setupNewUser() {
-        // Send OTP directly
         requestOTP();
     }
 
