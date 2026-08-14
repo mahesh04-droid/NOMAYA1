@@ -4,9 +4,23 @@ from .models import Product, Wishlist, Order, OrderItem, DrapeRecommendation, In
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'fabric', 'color', 'style', 'price', 'stock', 'featured')
-    list_filter = ('fabric', 'style', 'featured')
+    list_filter = ('fabric', 'style', 'featured', 'transparency', 'sheen', 'drape_ease')
     search_fields = ('name', 'color')
     prepopulated_fields = {'slug': ('name',)}
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'slug', 'description', 'price', 'stock', 'featured')
+        }),
+        ('Characteristics', {
+            'fields': ('fabric', 'color', 'style')
+        }),
+        ('Sensory Metrics', {
+            'fields': ('weight', 'transparency', 'sheen', 'drape_ease')
+        }),
+        ('Images', {
+            'fields': ('image', 'secondary_image')
+        }),
+    )
 
     def save_model(self, request, obj, form, change):
         if change:

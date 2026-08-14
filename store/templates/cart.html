@@ -21,15 +21,24 @@
                         <div>
                             <h3>{{ item.product.name }}</h3>
                             <p>{{ item.product.fabric }} &middot; {{ item.product.style }}</p>
+                            
+                            {% if item.addon_descriptions %}
+                            <div style="margin: 5px 0 10px; font-size: 12px; color: #535766; background: #fcfcfc; padding: 5px 8px; display: inline-block; border-radius: 4px; border: 1px solid #eaeaea;">
+                                {% for addon in item.addon_descriptions %}
+                                    <span style="display:block; margin-bottom: 2px;">+ {{ addon }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
                             <div class="qty">
-                                <form action="{% url 'cart_remove' item.product.id %}" method="POST" style="margin:0;">
+                                <form action="{% url 'cart_remove' item.cart_key %}" method="POST" style="margin:0;">
                                     {% csrf_token %}
                                     <button type="submit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
                                     </button>
                                 </form>
                                 {{ item.quantity }}
-                                <form action="{% url 'cart_add' item.product.id %}" method="POST" style="margin:0;">
+                                <form action="{% url 'cart_increment' item.cart_key %}" method="POST" style="margin:0;">
                                     {% csrf_token %}
                                     <button type="submit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>

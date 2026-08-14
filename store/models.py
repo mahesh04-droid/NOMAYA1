@@ -4,9 +4,19 @@ from django.contrib.auth.models import User
 class Product(models.Model):
     FABRICS=[('linen','Linen'),('silk','Silk'),('cotton','Cotton'),('chiffon','Chiffon'),('traditional','Traditional')]
     STYLES=[('pre-stitched','Pre-stitched'),('classic','Classic'),('easy','Easy Drape')]
+    TRANSPARENCY_CHOICES = [('Opaque', 'Opaque'), ('Semi-Sheer', 'Semi-Sheer'), ('Sheer', 'Sheer')]
+    SHEEN_CHOICES = [('Matte', 'Matte'), ('Subtle Luster', 'Subtle Luster'), ('High Luster', 'High Luster')]
+    DRAPE_EASE_CHOICES = [('Easy', 'Easy'), ('Medium', 'Medium'), ('Expert', 'Expert')]
+    
     name=models.CharField(max_length=180); slug=models.SlugField(unique=True); description=models.TextField(); price=models.DecimalField(max_digits=10,decimal_places=2)
     fabric=models.CharField(max_length=30,choices=FABRICS); color=models.CharField(max_length=40); style=models.CharField(max_length=30,choices=STYLES)
     image=models.URLField(default=""); secondary_image=models.URLField(blank=True, default=""); stock=models.PositiveIntegerField(default=0); featured=models.BooleanField(default=False)
+    
+    weight = models.CharField(max_length=50, default="Medium 400g")
+    transparency = models.CharField(max_length=20, choices=TRANSPARENCY_CHOICES, default='Opaque')
+    sheen = models.CharField(max_length=20, choices=SHEEN_CHOICES, default='Matte')
+    drape_ease = models.CharField(max_length=20, choices=DRAPE_EASE_CHOICES, default='Easy')
+    
     created_at=models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.name
     

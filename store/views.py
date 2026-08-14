@@ -68,19 +68,40 @@ def get_cart(request):
 def cart_add(request, product_id):
     if request.method == 'POST':
         cart = get_cart(request)
+        
+        fall_pico = request.POST.get('fall_pico') == 'on'
+        pre_draped = request.POST.get('pre_draped') == 'on'
+        
+        addons = []
+        if fall_pico: addons.append('fall_pico')
+        if pre_draped: addons.append('pre_draped')
+        
+        addon_str = "_".join(sorted(addons))
+        
         pid = str(product_id)
-        cart[pid] = cart.get(pid, 0) + 1
+        cart_key = f"{pid}|{addon_str}" if addon_str else pid
+        
+        cart[cart_key] = cart.get(cart_key, 0) + 1
         request.session['cart'] = cart
     return redirect(request.META.get('HTTP_REFERER', 'cart_view'))
 
-def cart_remove(request, product_id):
+def cart_remove(request, cart_key):
     if request.method == 'POST':
         cart = get_cart(request)
-        pid = str(product_id)
-        if pid in cart:
-            cart[pid] -= 1
-            if cart[pid] <= 0:
-                del cart[pid]
+        ckey = str(cart_key)
+        if ckey in cart:
+            cart[ckey] -= 1
+            if cart[ckey] <= 0:
+                del cart[ckey]
+        request.session['cart'] = cart
+    return redirect('cart_view')
+
+def cart_increment(request, cart_key):
+    if request.method == 'POST':
+        cart = get_cart(request)
+        ckey = str(cart_key)
+        if ckey in cart:
+            cart[ckey] += 1
         request.session['cart'] = cart
     return redirect('cart_view')
 
@@ -89,12 +110,27 @@ def cart_view(request):
     cart = get_cart(request)
     items = []
     total = 0
-    for pid, qty in cart.items():
+    for key, qty in cart.items():
+        parts = key.split('|')
+        pid = parts[0]
+        addons = parts[1].split('_') if len(parts) > 1 and parts[1] else []
+        
         try:
             p = Product.objects.get(id=pid)
-            subtotal = p.price * qty
+            item_price = p.price
+            addon_total = 0
+            addon_descriptions = []
+            if 'fall_pico' in addons:
+                addon_total += 150
+                addon_descriptions.append("Fall & Pico (+₹150)")
+            if 'pre_draped' in addons:
+                addon_total += 600
+                addon_descriptions.append("1-Min Pre-Draped (+₹600)")
+                
+            unit_price = item_price + addon_total
+            subtotal = unit_price * qty
             total += subtotal
-            items.append({'product': p, 'quantity': qty, 'subtotal': subtotal})
+            items.append({'product': p, 'quantity': qty, 'subtotal': subtotal, 'cart_key': key, 'addon_descriptions': addon_descriptions, 'unit_price': unit_price})
         except Product.DoesNotExist:
             pass
             
@@ -112,6 +148,18 @@ def cart_view(request):
     grand_total = (total - discount) + shipping
     
     return render(request, 'cart.html', {'items': items, 'total': total, 'discount': discount, 'coupon': coupon, 'shipping': shipping, 'grand_total': grand_total})
+
+def check_pincode(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            pincode = data.get('pincode', '').strip()
+            if len(pincode) == 6 and pincode.isdigit():
+                return JsonResponse({'status': 'success', 'message': 'Delivery in 3-5 Business Days', 'cod': True})
+        except Exception:
+            pass
+        return JsonResponse({'error': 'Invalid 6-digit Pincode'}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def auth_view(request):
     if request.user.is_authenticated:
@@ -258,17 +306,38 @@ def checkout_view(request):
     total = 0
     items = []
     line_items = []
-    for pid, qty in cart.items():
+    for key, qty in cart.items():
+        parts = key.split('|')
+        pid = parts[0]
+        addons = parts[1].split('_') if len(parts) > 1 and parts[1] else []
+        
         try:
             p = Product.objects.get(id=pid)
-            items.append({'product': p, 'quantity': qty})
-            total += p.price * qty
+            item_price = p.price
+            addon_total = 0
+            addon_descriptions = []
+            if 'fall_pico' in addons:
+                addon_total += 150
+                addon_descriptions.append("Fall & Pico")
+            if 'pre_draped' in addons:
+                addon_total += 600
+                addon_descriptions.append("1-Min Pre-Draped")
+                
+            unit_price = item_price + addon_total
+            subtotal = unit_price * qty
+            
+            name_desc = p.name
+            if addon_descriptions:
+                name_desc += f" (with {', '.join(addon_descriptions)})"
+                
+            items.append({'product': p, 'quantity': qty, 'unit_price': unit_price})
+            total += subtotal
             
             line_items.append({
                 'price_data': {
                     'currency': 'inr',
-                    'product_data': {'name': p.name},
-                    'unit_amount': int(p.price * 100),
+                    'product_data': {'name': name_desc},
+                    'unit_amount': int(unit_price * 100),
                 },
                 'quantity': qty,
             })
