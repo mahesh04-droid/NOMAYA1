@@ -18,7 +18,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('weight', 'transparency', 'sheen', 'drape_ease')
         }),
         ('Images', {
-            'fields': ('image', 'secondary_image')
+            'fields': ('image', 'secondary_image', 'flat_lay_image', 'video_url')
         }),
     )
 

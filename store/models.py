@@ -11,6 +11,8 @@ class Product(models.Model):
     name=models.CharField(max_length=180); slug=models.SlugField(unique=True); description=models.TextField(); price=models.DecimalField(max_digits=10,decimal_places=2)
     fabric=models.CharField(max_length=30,choices=FABRICS); color=models.CharField(max_length=40); style=models.CharField(max_length=30,choices=STYLES)
     image=models.URLField(default=""); secondary_image=models.URLField(blank=True, default=""); stock=models.PositiveIntegerField(default=0); featured=models.BooleanField(default=False)
+    video_url = models.URLField(blank=True, default="")
+    flat_lay_image = models.URLField(blank=True, default="")
     
     weight = models.CharField(max_length=50, default="Medium 400g")
     transparency = models.CharField(max_length=20, choices=TRANSPARENCY_CHOICES, default='Opaque')

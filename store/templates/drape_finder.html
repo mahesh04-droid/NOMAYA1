@@ -2,108 +2,152 @@
 
 {% block content %}
 <main>
-    <section class="finder">
-        <div class="finder-panel">
-            <div class="steps">
-                <span class="on">1</span><span class="on">2</span><span class="on">3</span><span class="on">4</span>
+    <section class="finder" style="min-height: 80vh; padding: 60px 5%;">
+        <div class="finder-panel" style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <div class="steps" id="progress-steps" style="margin-bottom: 40px; justify-content: center;">
+                <span class="on">1</span><span class="">2</span><span class="">3</span>
             </div>
-            <span>PERSONALISED STYLING</span>
-            <h1>Find Your<br/>Perfect Drape</h1>
+            
+            <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px;">Drape Finder Quiz</h1>
             
             {% if not result %}
-            <p>How do you want to feel?</p>
-            <form action="{% url 'drape_finder' %}" method="POST">
+            <form action="{% url 'drape_finder' %}" method="POST" id="quiz-form">
                 {% csrf_token %}
-                <div class="moods">
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="mood" value="Air" style="display:none;" checked onclick="updateMood(this.value)">
-                        <div class="btn outline" style="padding: 10px;">Air</div>
-                    </label>
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="mood" value="Drift" style="display:none;" onclick="updateMood(this.value)">
-                        <div class="btn outline" style="padding: 10px;">Drift</div>
-                    </label>
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="mood" value="Play" style="display:none;" onclick="updateMood(this.value)">
-                        <div class="btn outline" style="padding: 10px;">Play</div>
-                    </label>
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="mood" value="Mood" style="display:none;" onclick="updateMood(this.value)">
-                        <div class="btn outline" style="padding: 10px;">Mood</div>
-                    </label>
+                
+                <!-- STEP 1: Occasion -->
+                <div class="quiz-step" id="step-1">
+                    <p style="font-size: 1.2rem; color: #555; margin-bottom: 30px;">What's the occasion?</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <label class="quiz-option">
+                            <input type="radio" name="occasion" value="Work" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Office & Work</div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="occasion" value="Cocktail" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Cocktail & Evening</div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="occasion" value="Festive" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Festive & Wedding</div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="occasion" value="Casual" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Casual & Daily</div>
+                        </label>
+                    </div>
+                    <button type="button" class="btn full" style="margin-top: 40px;" onclick="nextStep(2)">Next: Climate</button>
                 </div>
-                
-                <label class="range-row">
-                    <span>experience <small>ⓘ</small></span>
-                    <input type="range" name="experience" min="1" max="5" value="3">
-                </label>
-                <label class="range-row">
-                    <span>movement <small>ⓘ</small></span>
-                    <input type="range" name="movement" min="1" max="5" value="3">
-                </label>
-                <label class="range-row">
-                    <span>coverage <small>ⓘ</small></span>
-                    <input type="range" name="coverage" min="1" max="5" value="3">
-                </label>
-                <label class="range-row">
-                    <span>climate <small>ⓘ</small></span>
-                    <input type="range" name="climate" min="1" max="5" value="3">
-                </label>
-                <label class="range-row">
-                    <span>fabric weight <small>ⓘ</small></span>
-                    <input type="range" name="fabric_weight" min="1" max="5" value="3">
-                </label>
-                
-                <button type="submit" class="btn full" style="margin-top: 20px;">See My Drape</button>
+
+                <!-- STEP 2: Climate -->
+                <div class="quiz-step" id="step-2" style="display:none;">
+                    <p style="font-size: 1.2rem; color: #555; margin-bottom: 30px;">What will the weather be like?</p>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                        <label class="quiz-option">
+                            <input type="radio" name="climate" value="Humid" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Warm & Humid (Need breathability)</div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="climate" value="AC" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Air Conditioned Indoors</div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="climate" value="Cool" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px;">Cool Breeze (Need warmth)</div>
+                        </label>
+                    </div>
+                    <div style="display:flex; gap: 15px; margin-top: 40px;">
+                        <button type="button" class="btn outline" onclick="nextStep(1)">Back</button>
+                        <button type="button" class="btn full" style="flex: 1;" onclick="nextStep(3)">Next: Mood</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Mood -->
+                <div class="quiz-step" id="step-3" style="display:none;">
+                    <p style="font-size: 1.2rem; color: #555; margin-bottom: 30px;">Pick a color palette that matches your vibe.</p>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                        <label class="quiz-option">
+                            <input type="radio" name="mood" value="Earth" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px; text-align: left;">
+                                <span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:#8B5A2B; margin-right:10px; vertical-align:middle;"></span>
+                                Earth Tones (Browns, Olives, Rust)
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="mood" value="Jewel" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px; text-align: left;">
+                                <span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:#0F52BA; margin-right:10px; vertical-align:middle;"></span>
+                                Jewel Tones (Sapphire, Ruby, Emerald)
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="mood" value="Pastel" style="display:none;" required>
+                            <div class="btn outline" style="padding: 20px; width:100%; border-radius: 8px; text-align: left;">
+                                <span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:#FFD1DC; margin-right:10px; vertical-align:middle;"></span>
+                                Pastels (Soft Pinks, Mint, Lilac)
+                            </div>
+                        </label>
+                    </div>
+                    <div style="display:flex; gap: 15px; margin-top: 40px;">
+                        <button type="button" class="btn outline" onclick="nextStep(2)">Back</button>
+                        <button type="submit" class="btn full" style="flex: 1;">Reveal My Match</button>
+                    </div>
+                </div>
             </form>
             {% else %}
-            <div class="recommend-result">
-                <img src="{{ result.image }}" alt="{{ result.name }}">
-                <div>
-                    <span>YOUR MATCH</span>
-                    <h3>{{ result.name }}</h3>
-                    <p>{{ result.description }}</p>
-                    <a href="{% url 'detail' result.slug %}">View the drape &rarr;</a>
+            <div class="recommend-result" style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: left;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+                    <img src="{{ result.image }}" alt="{{ result.name }}" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div>
+                        <span style="font-size: 12px; letter-spacing: 2px; color: #b68b40; font-weight: bold; text-transform: uppercase;">100% Match</span>
+                        <h3 style="font-family: 'Playfair Display', serif; font-size: 2rem; margin: 15px 0;">{{ result.name }}</h3>
+                        <p style="color: #666; line-height: 1.6; margin-bottom: 30px;">Based on your occasion ({{ occasion }}), climate preferences, and mood, this {{ result.fabric|title }} saree is the perfect fit for you.</p>
+                        <a href="{% url 'detail' result.slug %}" class="btn full">View the drape &rarr;</a>
+                    </div>
                 </div>
             </div>
-            <a href="{% url 'drape_finder' %}" class="btn outline full" style="margin-top: 20px;">Start Over</a>
+            <a href="{% url 'drape_finder' %}" class="btn outline" style="margin-top: 40px;">Start Over</a>
             {% endif %}
-        </div>
-        
-        <div class="finder-visual">
-            <img src="/static/images/chiffon.jpg" alt="Visual">
-            <div class="mood-card">
-                <span>MOOD <span id="display-mood">{{ mood|default:"Air" }}</span></span>
-                <h2>Calm, sophisticated,<br/>and earthy.</h2>
-                <div class="swatches"><i></i><i></i><i></i><i></i></div>
-            </div>
         </div>
     </section>
 </main>
+
 <script>
-    function updateMood(val) {
-        const display = document.getElementById('display-mood');
-        display.style.opacity = 0;
-        setTimeout(() => {
-            display.innerText = val;
-            display.style.opacity = 1;
-        }, 300);
-        
-        // Update styling of buttons
-        document.querySelectorAll('input[name="mood"]').forEach(input => {
-            if(input.checked) {
-                input.nextElementSibling.style.background = 'var(--plum)';
-                input.nextElementSibling.style.color = 'white';
-            } else {
-                input.nextElementSibling.style.background = 'transparent';
-                input.nextElementSibling.style.color = 'var(--plum)';
+    function nextStep(step) {
+        if(step > 1) {
+            const prevStep = step - 1;
+            let isValid = false;
+            if(prevStep === 1) isValid = document.querySelector('input[name="occasion"]:checked');
+            if(prevStep === 2) isValid = document.querySelector('input[name="climate"]:checked');
+            if(!isValid && step > prevStep) {
+                alert("Please select an option to continue.");
+                return;
             }
+        }
+
+        document.querySelectorAll('.quiz-step').forEach(el => el.style.display = 'none');
+        document.getElementById('step-' + step).style.display = 'block';
+        
+        const spans = document.getElementById('progress-steps').querySelectorAll('span');
+        spans.forEach((span, idx) => {
+            if(idx < step) span.classList.add('on');
+            else span.classList.remove('on');
         });
     }
-    
-    // Initial call
-    document.querySelectorAll('input[name="mood"]').forEach(input => {
-        if(input.checked) updateMood(input.value);
+
+    document.querySelectorAll('.quiz-option input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const name = this.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                const btn = r.nextElementSibling;
+                if(r.checked) {
+                    btn.style.background = '#282c3f';
+                    btn.style.color = 'white';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = '#282c3f';
+                }
+            });
+        });
     });
 </script>
 {% endblock %}

@@ -62,6 +62,37 @@
                 <button onclick="document.getElementById('sidebar-filters').classList.add('mobile-open')">Filters</button>
                 <span>{{ products.count }} pieces</span>
             </div>
+            
+            <div class="view-toggle" style="display:flex; justify-content:flex-end; margin-bottom: 20px;">
+                <div style="background: #f5f5f6; border-radius: 20px; padding: 4px; display: inline-flex;">
+                    <button class="view-btn active" onclick="toggleView('drape', this)" style="padding: 6px 16px; border:none; background: #fff; border-radius: 16px; font-size:12px; font-weight:600; cursor:pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #282c3f;">Model Drape</button>
+                    <button class="view-btn" onclick="toggleView('flat', this)" style="padding: 6px 16px; border:none; background: transparent; border-radius: 16px; font-size:12px; font-weight:600; color: #666; cursor:pointer;">Flat Lay</button>
+                </div>
+            </div>
+
+            <script>
+            function toggleView(viewType, btnElement) {
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.style.background = 'transparent';
+                    btn.style.color = '#666';
+                    btn.style.boxShadow = 'none';
+                });
+                btnElement.style.background = '#fff';
+                btnElement.style.color = '#282c3f';
+                btnElement.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                
+                if (viewType === 'drape') {
+                    document.documentElement.style.setProperty('--flat-display', 'none');
+                    document.documentElement.style.setProperty('--drape-display', 'block');
+                } else {
+                    document.documentElement.style.setProperty('--flat-display', 'block');
+                    document.documentElement.style.setProperty('--drape-display', 'none');
+                }
+            }
+            document.documentElement.style.setProperty('--flat-display', 'none');
+            document.documentElement.style.setProperty('--drape-display', 'block');
+            </script>
+
             <div class="product-grid">
                 {% for product in products %}
                     {% include 'includes/_product_card.html' with product=product %}

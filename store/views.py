@@ -249,24 +249,32 @@ from .models import DrapeRecommendation
 def drape_finder(request):
     if request.method == 'POST':
         data = request.POST
-        score = sum(int(data.get(k, 2)) for k in ['experience', 'movement', 'coverage', 'climate', 'fabric_weight'])
-        fabric = 'linen' if int(data.get('fabric_weight', 3)) <= 2 else ('silk' if int(data.get('experience', 3)) >= 4 else 'cotton')
+        occasion = data.get('occasion', 'Casual')
+        climate = data.get('climate', 'AC')
+        mood = data.get('mood', 'Earth')
+        
+        fabric = 'cotton'
+        if climate == 'Humid' or occasion == 'Casual':
+            fabric = 'cotton'
+            if mood == 'Pastel': fabric = 'linen'
+        elif climate == 'AC' or occasion == 'Work':
+            fabric = 'linen'
+        if occasion == 'Festive' or occasion == 'Cocktail':
+            fabric = 'silk'
+        if climate == 'Humid' and occasion == 'Cocktail':
+            fabric = 'chiffon'
+            
         qs = Product.objects.filter(fabric=fabric, stock__gt=0).order_by('-featured')
         product = qs.first() or Product.objects.filter(stock__gt=0).first()
         
         user = request.user if request.user.is_authenticated else None
-        mood = data.get('mood', 'Mood')
         
         obj = DrapeRecommendation.objects.create(
             user=user, mood=mood,
-            experience=data.get('experience', 3),
-            movement=data.get('movement', 3),
-            coverage=data.get('coverage', 3),
-            climate=data.get('climate', 3),
-            fabric_weight=data.get('fabric_weight', 3),
+            experience=3, movement=3, coverage=3, climate=3, fabric_weight=3,
             recommendation=product
         )
-        return render(request, 'drape_finder.html', {'result': product, 'mood': mood})
+        return render(request, 'drape_finder.html', {'result': product, 'occasion': occasion})
         
     return render(request, 'drape_finder.html')
 
