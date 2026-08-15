@@ -4,14 +4,61 @@
 <main>
     <div class="product-detail">
         <div class="gallery">
-            <img src="{{ product.image }}" alt="{{ product.name }}" id="main-image">
-            <div>
-                <button onclick="document.getElementById('main-image').src='{{ product.image }}'">
-                    <img src="{{ product.image }}" alt="Thumbnail">
+            <div style="position:relative; overflow:hidden; width:100%;" class="main-media-container" onmousemove="zoomIn(event)" onmouseout="zoomOut()">
+                <img src="{{ product.image }}" alt="{{ product.name }}" id="main-image" style="transition: transform 0.2s ease; width:100%; display:block; cursor:zoom-in;">
+                <video id="main-video" src="" loop muted playsinline style="display:none; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; pointer-events:none;"></video>
+            </div>
+            
+            <script>
+            function zoomIn(e) {
+                let img = document.getElementById('main-image');
+                if(img.style.display === 'none') return; // Don't zoom video
+                let x = e.offsetX / e.target.offsetWidth * 100;
+                let y = e.offsetY / e.target.offsetHeight * 100;
+                img.style.transformOrigin = `${x}% ${y}%`;
+                img.style.transform = "scale(2.5)"; // 4K Macro Zoom effect
+            }
+            function zoomOut() {
+                let img = document.getElementById('main-image');
+                img.style.transformOrigin = "center center";
+                img.style.transform = "scale(1)";
+            }
+            function switchMedia(type, url) {
+                let img = document.getElementById('main-image');
+                let vid = document.getElementById('main-video');
+                if (type === 'video') {
+                    img.style.display = 'none';
+                    vid.src = url;
+                    vid.style.display = 'block';
+                    vid.play();
+                } else {
+                    vid.style.display = 'none';
+                    vid.pause();
+                    img.src = url;
+                    img.style.display = 'block';
+                }
+            }
+            </script>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="switchMedia('image', '{{ product.image }}')" style="width:70px; height:90px; border:1px solid #ddd; padding:0; cursor:pointer;">
+                    <img src="{{ product.image }}" alt="Thumbnail" style="width:100%; height:100%; object-fit:cover;">
                 </button>
                 {% if product.secondary_image %}
-                <button onclick="document.getElementById('main-image').src='{{ product.secondary_image }}'">
-                    <img src="{{ product.secondary_image }}" alt="Thumbnail">
+                <button onclick="switchMedia('image', '{{ product.secondary_image }}')" style="width:70px; height:90px; border:1px solid #ddd; padding:0; cursor:pointer;">
+                    <img src="{{ product.secondary_image }}" alt="Thumbnail" style="width:100%; height:100%; object-fit:cover;">
+                </button>
+                {% endif %}
+                {% if product.flat_lay_image %}
+                <button onclick="switchMedia('image', '{{ product.flat_lay_image }}')" style="width:70px; height:90px; border:1px solid #ddd; padding:0; cursor:pointer; position:relative;">
+                    <img src="{{ product.flat_lay_image }}" alt="Thumbnail" style="width:100%; height:100%; object-fit:cover;">
+                    <span style="position:absolute; bottom:0; left:0; background:rgba(255,255,255,0.9); color:#282c3f; font-size:9px; font-weight:bold; padding:4px 0; width:100%; border-top:1px solid #ddd;">WEAVE ZOOM</span>
+                </button>
+                {% endif %}
+                {% if product.video_url %}
+                <button onclick="switchMedia('video', '{{ product.video_url }}')" style="width:70px; height:90px; border:1px solid #ddd; padding:0; cursor:pointer; position:relative; background:#000;">
+                    <video src="{{ product.video_url }}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;"></video>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 </button>
                 {% endif %}
             </div>
