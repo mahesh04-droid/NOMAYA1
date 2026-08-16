@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_tags %}
 
 {% block content %}
 <main>
@@ -46,7 +47,7 @@
                                 </form>
                             </div>
                         </div>
-                        <strong>₹{{ item.subtotal|floatformat:"0" }}</strong>
+                        <strong>{{ item.subtotal|currency:active_currency }}</strong>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -69,22 +70,22 @@
             
             <div>
                 <span>Subtotal</span>
-                <strong>₹{{ total|floatformat:"0" }}</strong>
+                <strong>{{ total|currency:active_currency }}</strong>
             </div>
             {% if discount > 0 %}
             <div style="color: green;">
                 <span>Discount</span>
-                <strong>-₹{{ discount|floatformat:"0" }}</strong>
+                <strong>-{{ discount|currency:active_currency }}</strong>
             </div>
             {% endif %}
             <div>
                 <span>Shipping</span>
-                <strong>{% if shipping == 0 %}Complimentary{% else %}₹{{ shipping }}{% endif %}</strong>
+                <strong>{% if shipping == 0 %}Complimentary{% else %}{{ shipping|currency:active_currency }}{% endif %}</strong>
             </div>
             <hr/>
             <div>
                 <span>Total</span>
-                <strong>₹{{ grand_total|floatformat:"0" }}</strong>
+                <strong>{{ grand_total|currency:active_currency }}</strong>
             </div>
             <a href="{% url 'checkout' %}" class="btn full">Proceed to Checkout</a>
         </aside>

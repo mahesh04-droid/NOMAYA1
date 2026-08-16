@@ -1,3 +1,4 @@
+{% load currency_tags %}
 <article class="product-card" id="card-{{ product.id }}">
     <div class="product-image" style="position:relative; background:#f9f9f9;">
         <a href="{% url 'detail' product.slug %}" style="display:block; width:100%; height:100%;">
@@ -23,6 +24,6 @@
             </div>
             {% endif %}
         </div>
-        <strong>₹{{ product.price|floatformat:"0" }}</strong>
+        <strong>{{ product.price|currency:active_currency }}</strong>
     </div>
 </article>

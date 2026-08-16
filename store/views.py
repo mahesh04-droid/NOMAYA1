@@ -11,7 +11,7 @@ import random
 import json
 import stripe
 
-from .models import Product, Review, Coupon, Order, Wishlist, OrderItem, DrapeRecommendation, UserProfile, OTPVerification, InventoryLog
+from .models import Product, Review, Coupon, Order, Wishlist, OrderItem, DrapeRecommendation, UserProfile, OTPVerification, InventoryLog, UGCPost
 from django.db import transaction
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -278,8 +278,19 @@ def drape_finder(request):
         
     return render(request, 'drape_finder.html')
 
+def set_currency(request):
+    if request.method == 'POST':
+        currency = request.POST.get('currency', 'INR')
+        if currency in settings.EXCHANGE_RATES:
+            request.session['currency'] = currency
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
 def draping_studio(request):
     return render(request, 'draping_studio.html')
+
+def ugc_gallery(request):
+    posts = UGCPost.objects.filter(approved=True).order_by('-created_at')
+    return render(request, 'ugc_gallery.html', {'posts': posts})
 
 from .models import Order, Wishlist
 

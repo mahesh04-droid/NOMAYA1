@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Wishlist, Order, OrderItem, DrapeRecommendation, InventoryLog
+from .models import Product, Wishlist, Order, OrderItem, DrapeRecommendation, InventoryLog, UGCPost
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -69,3 +69,9 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Wishlist)
 admin.site.register(DrapeRecommendation)
+
+@admin.register(UGCPost)
+class UGCPostAdmin(admin.ModelAdmin):
+    list_display = ('instagram_handle', 'product', 'approved', 'created_at')
+    list_filter = ('approved', 'created_at')
+    search_fields = ('instagram_handle', 'caption')
