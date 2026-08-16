@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main style="min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+    <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 40px; max-width: 500px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px;">
+            🔒
+        </div>
+        <h1 style="font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 12px; color: #1e1e24;">Access Restricted</h1>
+        <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+            {{ message|default:"You do not have administrative or stock management privileges to view this portal." }}
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="{% url 'home' %}" class="btn" style="padding: 10px 20px;">Return Home</a>
+            <a href="{% url 'profile' %}" class="btn outline" style="padding: 10px 20px;">My Profile</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

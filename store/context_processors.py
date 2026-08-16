@@ -1,11 +1,11 @@
-from django.conf import settings
-
-def currency_processor(request):
-    currency = request.session.get('currency', 'INR')
-    if currency not in settings.EXCHANGE_RATES:
-        currency = 'INR'
-        
+def inventory_context(request):
+    is_staff = False
+    if request.user.is_authenticated:
+        is_staff = (
+            request.user.is_superuser or 
+            request.user.is_staff or 
+            request.user.groups.filter(name__in=['Inventory Managers', 'Stockers', 'Managers', 'Admin']).exists()
+        )
     return {
-        'active_currency': currency,
-        'exchange_rates': settings.EXCHANGE_RATES
+        'is_inventory_staff': is_staff
     }

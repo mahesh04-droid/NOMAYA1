@@ -11,7 +11,7 @@ import random
 import json
 import stripe
 
-from .models import Product, Review, Coupon, Order, Wishlist, OrderItem, DrapeRecommendation, UserProfile, OTPVerification, InventoryLog, UGCPost
+from .models import Product, Review, Coupon, Order, Wishlist, OrderItem, DrapeRecommendation, UserProfile, OTPVerification, InventoryLog
 from django.db import transaction
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -278,19 +278,8 @@ def drape_finder(request):
         
     return render(request, 'drape_finder.html')
 
-def set_currency(request):
-    if request.method == 'POST':
-        currency = request.POST.get('currency', 'INR')
-        if currency in settings.EXCHANGE_RATES:
-            request.session['currency'] = currency
-    return redirect(request.META.get('HTTP_REFERER', '/'))
-
 def draping_studio(request):
     return render(request, 'draping_studio.html')
-
-def ugc_gallery(request):
-    posts = UGCPost.objects.filter(approved=True).order_by('-created_at')
-    return render(request, 'ugc_gallery.html', {'posts': posts})
 
 from .models import Order, Wishlist
 
@@ -495,3 +484,100 @@ def apply_coupon(request):
         except Coupon.DoesNotExist:
             request.session.pop('coupon_id', None)
     return redirect('cart_view')
+
+
+def check_inventory_staff(user):
+    return user.is_authenticated and (
+        user.is_superuser or 
+        user.is_staff or 
+        user.groups.filter(name__in=['Inventory Managers', 'Stockers', 'Managers', 'Admin']).exists()
+    )
+
+
+@login_required
+def inventory_dashboard(request):
+    if not check_inventory_staff(request.user):
+        return render(request, '403.html', {'message': 'Restricted Access. Inventory staff clearance required.'}, status=403)
+    
+    products = Product.objects.all().order_by('stock', 'name')
+    
+    q = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', 'all')
+    fabric_filter = request.GET.get('fabric', 'all')
+    
+    if q:
+        products = products.filter(name__icontains=q)
+    if fabric_filter != 'all':
+        products = products.filter(fabric=fabric_filter)
+    if status_filter == 'low':
+        products = products.filter(stock__lte=5, stock__gt=0)
+    elif status_filter == 'out':
+        products = products.filter(stock=0)
+    elif status_filter == 'in_stock':
+        products = products.filter(stock__gt=5)
+        
+    all_products = Product.objects.all()
+    total_skus = all_products.count()
+    total_units = sum(p.stock for p in all_products)
+    low_stock_count = all_products.filter(stock__lte=5, stock__gt=0).count()
+    out_of_stock_count = all_products.filter(stock=0).count()
+    
+    recent_logs = InventoryLog.objects.select_related('product', 'user').order_by('-created_at')[:30]
+    fabrics = [f[0] for f in Product.FABRICS]
+    
+    return render(request, 'inventory.html', {
+        'products': products,
+        'total_skus': total_skus,
+        'total_units': total_units,
+        'low_stock_count': low_stock_count,
+        'out_of_stock_count': out_of_stock_count,
+        'recent_logs': recent_logs,
+        'fabrics': fabrics,
+        'current_q': q,
+        'current_status': status_filter,
+        'current_fabric': fabric_filter,
+    })
+
+
+@login_required
+def api_update_stock(request):
+    if not check_inventory_staff(request.user):
+        return JsonResponse({'status': 'error', 'message': 'Permission denied. Staff only.'}, status=403)
+        
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            new_stock = int(data.get('stock'))
+            reason = data.get('reason', 'Manual frontend stock update')
+            
+            if new_stock < 0:
+                return JsonResponse({'status': 'error', 'message': 'Stock cannot be negative'}, status=400)
+                
+            product = get_object_or_404(Product, id=product_id)
+            diff = new_stock - product.stock
+            
+            if diff != 0:
+                with transaction.atomic():
+                    product.stock = new_stock
+                    product.save()
+                    
+                    InventoryLog.objects.create(
+                        product=product,
+                        user=request.user,
+                        quantity_changed=diff,
+                        reason=reason
+                    )
+            
+            return JsonResponse({
+                'status': 'success',
+                'product_id': product.id,
+                'new_stock': product.stock,
+                'diff': diff,
+                'message': f'Stock for {product.name} updated to {product.stock}'
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+

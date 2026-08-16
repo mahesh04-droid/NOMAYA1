@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory & Stock Manager | NOMAYA{% endblock %}
+
+{% block content %}
+<main style="padding: 40px 5vw; max-width: 1400px; margin: 0 auto; min-height: 85vh;">
+    <!-- Header with Staff Clearance Badge -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+        <div>
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4f46e5;"></span>
+                Staff & Stock Portal · {{ user.username }}
+            </div>
+            <h1 style="font-family: 'Playfair Display', serif; font-size: 2.2rem; margin: 0; color: #1e1e24;">Inventory Management</h1>
+            <p style="color: #666; margin: 6px 0 0 0; font-size: 14px;">Real-time warehouse stock tracking, instant quota adjustment, and audit log.</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="{% url 'collections' %}" class="btn outline" style="padding: 10px 18px; font-size: 13px;">View Live Catalog &rarr;</a>
+            <a href="/admin/store/product/" target="_blank" class="btn" style="padding: 10px 18px; font-size: 13px; background: #282c3f;">Django Admin &nearr;</a>
+        </div>
+    </div>
+
+    <!-- KPI Summary Metrics -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 35px;">
+        <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+            <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px;">Total Active SKUs</div>
+            <div style="font-size: 2.2rem; font-weight: 700; color: #282c3f;">{{ total_skus }}</div>
+            <div style="font-size: 12px; color: #03a685; margin-top: 4px;">Active in catalog</div>
+        </div>
+
+        <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+            <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px;">Warehouse Units</div>
+            <div style="font-size: 2.2rem; font-weight: 700; color: #282c3f;">{{ total_units }}</div>
+            <div style="font-size: 12px; color: #666; margin-top: 4px;">Total pieces available</div>
+        </div>
+
+        <div style="background: {% if low_stock_count > 0 %}#fffbeb{% else %}white{% endif %}; border: 1px solid {% if low_stock_count > 0 %}#fde68a{% else %}#eaeaea{% endif %}; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+            <div style="font-size: 12px; color: #d97706; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px;">⚠️ Low Stock Alert</div>
+            <div style="font-size: 2.2rem; font-weight: 700; color: #b45309;">{{ low_stock_count }}</div>
+            <div style="font-size: 12px; color: #d97706; margin-top: 4px;">5 or fewer units left</div>
+        </div>
+
+        <div style="background: {% if out_of_stock_count > 0 %}#fef2f2{% else %}white{% endif %}; border: 1px solid {% if out_of_stock_count > 0 %}#fecaca{% else %}#eaeaea{% endif %}; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+            <div style="font-size: 12px; color: #dc2626; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px;">🚫 Out of Stock</div>
+            <div style="font-size: 2.2rem; font-weight: 700; color: #991b1b;">{{ out_of_stock_count }}</div>
+            <div style="font-size: 12px; color: #dc2626; margin-top: 4px;">Requires replenishment</div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div style="background: #fcfcfc; border: 1px solid #eaeaea; border-radius: 12px; padding: 18px 22px; margin-bottom: 25px;">
+        <form method="GET" action="{% url 'inventory_dashboard' %}" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between; margin: 0;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; flex: 1; min-width: 280px;">
+                <!-- Search Input -->
+                <div style="position: relative; flex: 1; min-width: 220px;">
+                    <input type="text" name="q" value="{{ current_q }}" placeholder="Search by SKU name or color..." style="width: 100%; padding: 10px 14px 10px 36px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+
+                <!-- Fabric Filter -->
+                <select name="fabric" onchange="this.form.submit()" style="padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                    <option value="all" {% if current_fabric == 'all' %}selected{% endif %}>All Fabrics</option>
+                    {% for f in fabrics %}
+                    <option value="{{ f }}" {% if current_fabric == f %}selected{% endif %}>{{ f|title }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Stock Status Filter -->
+                <select name="status" onchange="this.form.submit()" style="padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Stock Levels</option>
+                    <option value="low" {% if current_status == 'low' %}selected{% endif %}>⚠️ Low Stock (≤ 5)</option>
+                    <option value="out" {% if current_status == 'out' %}selected{% endif %}>🚫 Out of Stock (0)</option>
+                    <option value="in_stock" {% if current_status == 'in_stock' %}selected{% endif %}>🟢 Healthy Stock (> 5)</option>
+                </select>
+
+                <button type="submit" class="btn" style="padding: 10px 18px; font-size: 13px;">Filter</button>
+                {% if current_q or current_fabric != 'all' or current_status != 'all' %}
+                <a href="{% url 'inventory_dashboard' %}" class="btn outline" style="padding: 10px 14px; font-size: 13px;">Reset</a>
+                {% endif %}
+            </div>
+
+            <div style="font-size: 13px; color: #666; font-weight: 500;">
+                Showing <b>{{ products.count }}</b> pieces
+            </div>
+        </form>
+    </div>
+
+    <!-- Product Stock Table -->
+    <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 40px;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 1px solid #eaeaea; color: #555; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <th style="padding: 14px 18px;">Product</th>
+                        <th style="padding: 14px 18px;">Fabric & Details</th>
+                        <th style="padding: 14px 18px;">Price</th>
+                        <th style="padding: 14px 18px;">Stock Status</th>
+                        <th style="padding: 14px 18px; text-align: center;">Quick Adjust Stock</th>
+                        <th style="padding: 14px 18px; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr id="row-{{ p.id }}" style="border-bottom: 1px solid #f0f0f0; transition: background 0.2s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='white'">
+                        <!-- Thumbnail & Name -->
+                        <td style="padding: 14px 18px;">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <img src="{{ p.image }}" alt="{{ p.name }}" style="width: 48px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #eee;">
+                                <div>
+                                    <a href="{% url 'detail' p.slug %}" target="_blank" style="font-weight: 600; color: #282c3f; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                        {{ p.name }}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                    </a>
+                                    <div style="font-size: 12px; color: #888; margin-top: 2px;">SKU #NOM-{{ p.id|stringformat:"04d" }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Fabric & Color -->
+                        <td style="padding: 14px 18px;">
+                            <div style="color: #444; font-weight: 500;">{{ p.fabric|title }}</div>
+                            <div style="font-size: 12px; color: #888;">{{ p.color }} · {{ p.style }}</div>
+                        </td>
+
+                        <!-- Price -->
+                        <td style="padding: 14px 18px; font-weight: 600; color: #282c3f;">
+                            ₹{{ p.price|floatformat:"0" }}
+                        </td>
+
+                        <!-- Status Badge -->
+                        <td style="padding: 14px 18px;">
+                            <span id="badge-{{ p.id }}">
+                                {% if p.stock == 0 %}
+                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #dc2626;"></span> Out of Stock
+                                </span>
+                                {% elif p.stock <= 5 %}
+                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #d97706;"></span> Low Stock ({{ p.stock }})
+                                </span>
+                                {% else %}
+                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span> In Stock ({{ p.stock }})
+                                </span>
+                                {% endif %}
+                            </span>
+                        </td>
+
+                        <!-- Inline Adjuster -->
+                        <td style="padding: 14px 18px; text-align: center;">
+                            <div style="display: inline-flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white;">
+                                <button type="button" onclick="stepStock({{ p.id }}, -1)" style="padding: 6px 12px; background: #f8f8f8; border: none; cursor: pointer; font-weight: bold; color: #555; transition: background 0.1s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f8f8f8'">-</button>
+                                <input type="number" id="input-stock-{{ p.id }}" value="{{ p.stock }}" min="0" style="width: 60px; text-align: center; border: none; font-weight: 600; font-size: 14px; padding: 6px 0; -moz-appearance: textfield;">
+                                <button type="button" onclick="stepStock({{ p.id }}, 1)" style="padding: 6px 12px; background: #f8f8f8; border: none; cursor: pointer; font-weight: bold; color: #555; transition: background 0.1s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f8f8f8'">+</button>
+                            </div>
+                        </td>
+
+                        <!-- Action Button -->
+                        <td style="padding: 14px 18px; text-align: right;">
+                            <button type="button" id="btn-save-{{ p.id }}" onclick="saveStock({{ p.id }})" class="btn" style="padding: 6px 14px; font-size: 12px; border-radius: 6px;">
+                                Save
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 40px; text-align: center; color: #888;">
+                            <h3>No inventory items matched your criteria.</h3>
+                            <a href="{% url 'inventory_dashboard' %}" class="btn outline" style="margin-top: 10px;">Clear Filters</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Inventory Audit Logs -->
+    <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h3 style="font-family: 'Playfair Display', serif; font-size: 1.4rem; margin: 0; color: #1e1e24;">Stock Change Audit Logs</h3>
+                <p style="font-size: 13px; color: #666; margin: 4px 0 0 0;">Automated log of recent order decrements and manual manager adjustments.</p>
+            </div>
+            <span style="font-size: 12px; color: #888;">Last 30 events</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #eaeaea; color: #777; font-size: 11px; text-transform: uppercase;">
+                        <th style="padding: 10px 14px;">Timestamp</th>
+                        <th style="padding: 10px 14px;">Product SKU</th>
+                        <th style="padding: 10px 14px;">Operator</th>
+                        <th style="padding: 10px 14px;">Qty Delta</th>
+                        <th style="padding: 10px 14px;">Reason</th>
+                    </tr>
+                </thead>
+                <tbody id="log-table-body">
+                    {% for log in recent_logs %}
+                    <tr style="border-bottom: 1px solid #f5f5f5;">
+                        <td style="padding: 10px 14px; color: #888;">{{ log.created_at|date:"M d, Y · H:i" }}</td>
+                        <td style="padding: 10px 14px; font-weight: 600; color: #282c3f;">{{ log.product.name }}</td>
+                        <td style="padding: 10px 14px; color: #555;">{{ log.user.username|default:"System" }}</td>
+                        <td style="padding: 10px 14px; font-weight: 600;">
+                            {% if log.quantity_changed > 0 %}
+                            <span style="color: #059669;">+{{ log.quantity_changed }}</span>
+                            {% else %}
+                            <span style="color: #dc2626;">{{ log.quantity_changed }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px 14px; color: #666;">{{ log.reason }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 20px; text-align: center; color: #999;">No recent inventory logs recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Floating Toast Notification -->
+<div id="toast" style="position: fixed; bottom: 25px; right: 25px; background: #282c3f; color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.15); opacity: 0; transform: translateY(20px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; z-index: 9999;">
+    Stock updated successfully
+</div>
+
+<script>
+function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.style.background = isError ? '#dc2626' : '#10b981';
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+    }, 3000);
+}
+
+function stepStock(productId, delta) {
+    const input = document.getElementById(`input-stock-${productId}`);
+    let val = parseInt(input.value) || 0;
+    val += delta;
+    if (val < 0) val = 0;
+    input.value = val;
+}
+
+function saveStock(productId) {
+    const input = document.getElementById(`input-stock-${productId}`);
+    const btn = document.getElementById(`btn-save-${productId}`);
+    const stockVal = parseInt(input.value);
+    
+    if (isNaN(stockVal) || stockVal < 0) {
+        showToast('Please enter a valid non-negative number', true);
+        return;
+    }
+    
+    const originalText = btn.innerText;
+    btn.innerText = 'Saving...';
+    btn.disabled = true;
+    
+    fetch('{% url "api_update_stock" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            stock: stockVal,
+            reason: 'Manual manager quick adjustment'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        
+        if (data.status === 'success') {
+            showToast(data.message);
+            
+            // Update badge UI
+            const badgeSpan = document.getElementById(`badge-${productId}`);
+            if (data.new_stock === 0) {
+                badgeSpan.innerHTML = `
+                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #dc2626;"></span> Out of Stock
+                    </span>
+                `;
+            } else if (data.new_stock <= 5) {
+                badgeSpan.innerHTML = `
+                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #d97706;"></span> Low Stock (${data.new_stock})
+                    </span>
+                `;
+            } else {
+                badgeSpan.innerHTML = `
+                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span> In Stock (${data.new_stock})
+                    </span>
+                `;
+            }
+        } else {
+            showToast(data.message || 'Error updating stock', true);
+        }
+    })
+    .catch(err => {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        showToast('Network error while saving stock', true);
+    });
+}
+</script>
+{% endblock %}

@@ -5,8 +5,6 @@ urlpatterns = [
     path('', views.index, name='home'),
     path('collections/', views.collections, name='collections'),
     path('product/<slug:slug>/', views.detail, name='detail'),
-    # Config
-    path('set-currency/', views.set_currency, name='set_currency'),
     
     # Cart & Checkout
     path('cart/', views.cart_view, name='cart_view'),
@@ -37,6 +35,7 @@ urlpatterns = [
     path('drape-finder/', views.drape_finder, name='drape_finder'),
     path('draping-studio/', views.draping_studio, name='draping_studio'),
     
-    # UGC
-    path('gallery/', views.ugc_gallery, name='ugc_gallery'),
+    # Inventory Management (Staff & Manager Portal)
+    path('inventory/', views.inventory_dashboard, name='inventory_dashboard'),
+    path('api/inventory/update/', views.api_update_stock, name='api_update_stock'),
 ]

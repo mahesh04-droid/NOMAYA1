@@ -32,10 +32,6 @@ class Product(models.Model):
     @property
     def review_count(self):
         return self.reviews.count()
-        
-    @property
-    def approved_ugc(self):
-        return self.ugc_posts.filter(approved=True).order_by('-created_at')
 
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
@@ -92,15 +88,3 @@ class InventoryLog(models.Model):
     
     def __str__(self):
         return f"{self.product.name} ({self.quantity_changed}) - {self.reason}"
-
-class UGCPost(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    instagram_handle = models.CharField(max_length=50)
-    image = models.URLField()
-    caption = models.TextField(blank=True)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='ugc_posts')
-    approved = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"@{self.instagram_handle} - {self.product.name if self.product else 'General'}"

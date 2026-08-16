@@ -14,7 +14,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware','django.middleware.security.SecurityMiddleware','whitenoise.middleware.WhiteNoiseMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','django.contrib.messages.middleware.MessageMiddleware','django.middleware.clickjacking.XFrameOptionsMiddleware']
 ROOT_URLCONF = 'nomaya.urls'
-TEMPLATES = [{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS':[],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.request','django.contrib.auth.context_processors.auth','django.contrib.messages.context_processors.messages', 'store.context_processors.currency_processor']}}]
+TEMPLATES = [{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS':[],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.request','django.contrib.auth.context_processors.auth','django.contrib.messages.context_processors.messages','store.context_processors.inventory_context']}}]
 WSGI_APPLICATION = 'nomaya.wsgi.application'
 DATABASES = {
     'default': {
@@ -36,11 +36,3 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 CORS_ALLOWED_ORIGINS=[x.strip() for x in os.getenv('CORS_ORIGINS','http://localhost:5173').split(',') if x.strip()]
 REST_FRAMEWORK={'DEFAULT_AUTHENTICATION_CLASSES':('rest_framework_simplejwt.authentication.JWTAuthentication',),'DEFAULT_PERMISSION_CLASSES':('rest_framework.permissions.AllowAny',)}
 LOGIN_URL = 'auth'
-
-# Multi-currency rates (Relative to INR)
-EXCHANGE_RATES = {
-    'INR': {'rate': 1.0, 'symbol': '₹'},
-    'USD': {'rate': 0.012, 'symbol': '$'},
-    'GBP': {'rate': 0.0094, 'symbol': '£'},
-    'EUR': {'rate': 0.011, 'symbol': '€'},
-}

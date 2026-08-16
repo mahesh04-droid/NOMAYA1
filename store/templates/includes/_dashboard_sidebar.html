@@ -4,4 +4,7 @@
     <a class="{% if request.resolver_match.url_name == 'orders' %}selected{% endif %}" href="{% url 'orders' %}">Orders</a>
     <a class="{% if request.resolver_match.url_name == 'wishlist' %}selected{% endif %}" href="{% url 'wishlist' %}">Wishlist</a>
     <a href="{% url 'drape_finder' %}">Drape Finder</a>
+    {% if is_inventory_staff %}
+    <a class="{% if request.resolver_match.url_name == 'inventory_dashboard' %}selected{% endif %}" href="{% url 'inventory_dashboard' %}" style="color: #4f46e5; font-weight: 600;">📦 Inventory Portal</a>
+    {% endif %}
 </aside>
