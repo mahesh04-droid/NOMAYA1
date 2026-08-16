@@ -400,7 +400,11 @@
             return r.json();
         })
         .then(data => {
-            if (data.status === 'success') window.location.href = '/profile/';
+            if (data.status === 'success') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const nextUrl = urlParams.get('next') || '/profile/';
+                window.location.href = nextUrl;
+            }
         })
         .catch(err => {
             btn.innerText = "Log In";
@@ -428,7 +432,11 @@
             return r.json();
         })
         .then(data => {
-            if (data.status === 'success') window.location.href = '/profile/';
+            if (data.status === 'success') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const nextUrl = urlParams.get('next') || '/profile/';
+                window.location.href = nextUrl;
+            }
         })
         .catch(err => {
             btn.innerText = "Verify & Continue";

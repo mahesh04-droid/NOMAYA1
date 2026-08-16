@@ -181,9 +181,13 @@ def send_otp(identifier):
 def auth_check(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        identifier = data.get('identifier', '').strip().lower()
+        identifier = data.get('identifier', '').strip()
         
-        user_exists = User.objects.filter(username=identifier).exists() or UserProfile.objects.filter(phone_number=identifier).exists()
+        user_exists = (
+            User.objects.filter(username__iexact=identifier).exists() or 
+            User.objects.filter(email__iexact=identifier).exists() or 
+            UserProfile.objects.filter(phone_number=identifier).exists()
+        )
         
         return JsonResponse({'exists': user_exists})
     return JsonResponse({'error': 'Invalid'}, status=400)
@@ -191,7 +195,7 @@ def auth_check(request):
 def auth_request_otp(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        identifier = data.get('identifier', '').strip().lower()
+        identifier = data.get('identifier', '').strip()
         otp = send_otp(identifier)
         return JsonResponse({'status': 'sent', 'dev_otp': otp})
     return JsonResponse({'error': 'Invalid'}, status=400)
@@ -199,19 +203,23 @@ def auth_request_otp(request):
 def auth_verify(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        identifier = data.get('identifier', '').strip().lower()
+        identifier = data.get('identifier', '').strip()
         method = data.get('method') # 'otp' or 'password'
         
-        user = User.objects.filter(username=identifier).first()
+        user = User.objects.filter(username__iexact=identifier).first()
+        if not user:
+            user = User.objects.filter(email__iexact=identifier).first()
         if not user:
             profile = UserProfile.objects.filter(phone_number=identifier).first()
             if profile: user = profile.user
             
         if method == 'password':
             password = data.get('password', '')
-            u = authenticate(request, username=user.username if user else identifier, password=password)
+            # If user found, authenticate with exact username
+            target_username = user.username if user else identifier
+            u = authenticate(request, username=target_username, password=password)
             if u:
-                login(request, u)
+                login(request, u, backend='django.contrib.auth.backends.ModelBackend')
                 return JsonResponse({'status': 'success'})
             return JsonResponse({'error': 'Invalid credentials.'}, status=400)
             
