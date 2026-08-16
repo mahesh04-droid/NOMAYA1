@@ -589,3 +589,207 @@ def api_update_stock(request):
             
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+
+@login_required
+def product_add(request):
+    if not check_inventory_staff(request.user):
+        return render(request, '403.html', status=403)
+    
+    if request.method == 'POST':
+        try:
+            from django.utils.text import slugify
+            from decimal import Decimal
+            
+            name = request.POST.get('name', '').strip()
+            slug = request.POST.get('slug', '').strip() or slugify(name)
+            
+            # Ensure unique slug
+            base_slug = slug
+            counter = 1
+            while Product.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            
+            sale_price_val = request.POST.get('sale_price', '').strip()
+            
+            product = Product.objects.create(
+                name=name,
+                slug=slug,
+                description=request.POST.get('description', ''),
+                price=Decimal(request.POST.get('price', '0')),
+                sale_price=Decimal(sale_price_val) if sale_price_val else None,
+                stock=int(request.POST.get('stock', '0')),
+                fabric=request.POST.get('fabric', 'cotton'),
+                color=request.POST.get('color', ''),
+                style=request.POST.get('style', 'classic'),
+                image=request.POST.get('image', ''),
+                secondary_image=request.POST.get('secondary_image', ''),
+                flat_lay_image=request.POST.get('flat_lay_image', ''),
+                video_url=request.POST.get('video_url', ''),
+                weight=request.POST.get('weight', 'Medium 400g'),
+                transparency=request.POST.get('transparency', 'Opaque'),
+                sheen=request.POST.get('sheen', 'Matte'),
+                drape_ease=request.POST.get('drape_ease', 'Easy'),
+                featured='featured' in request.POST,
+            )
+            
+            if product.stock > 0:
+                InventoryLog.objects.create(
+                    product=product, user=request.user,
+                    quantity_changed=product.stock,
+                    reason="Initial stock - Product created"
+                )
+            
+            return redirect('inventory_dashboard')
+        except Exception as e:
+            return render(request, 'inventory_product_form.html', {
+                'error': str(e),
+                'fabrics': Product.FABRICS,
+                'styles': Product.STYLES,
+                'transparency_choices': Product.TRANSPARENCY_CHOICES,
+                'sheen_choices': Product.SHEEN_CHOICES,
+                'drape_ease_choices': Product.DRAPE_EASE_CHOICES,
+                'is_edit': False,
+            })
+    
+    return render(request, 'inventory_product_form.html', {
+        'fabrics': Product.FABRICS,
+        'styles': Product.STYLES,
+        'transparency_choices': Product.TRANSPARENCY_CHOICES,
+        'sheen_choices': Product.SHEEN_CHOICES,
+        'drape_ease_choices': Product.DRAPE_EASE_CHOICES,
+        'is_edit': False,
+    })
+
+
+@login_required
+def product_edit(request, product_id):
+    if not check_inventory_staff(request.user):
+        return render(request, '403.html', status=403)
+    
+    product = get_object_or_404(Product, id=product_id)
+    
+    if request.method == 'POST':
+        try:
+            from decimal import Decimal
+            
+            old_stock = product.stock
+            
+            product.name = request.POST.get('name', product.name)
+            product.slug = request.POST.get('slug', product.slug)
+            product.description = request.POST.get('description', product.description)
+            product.price = Decimal(request.POST.get('price', str(product.price)))
+            
+            sale_price_val = request.POST.get('sale_price', '').strip()
+            product.sale_price = Decimal(sale_price_val) if sale_price_val else None
+            
+            product.stock = int(request.POST.get('stock', product.stock))
+            product.fabric = request.POST.get('fabric', product.fabric)
+            product.color = request.POST.get('color', product.color)
+            product.style = request.POST.get('style', product.style)
+            product.image = request.POST.get('image', product.image)
+            product.secondary_image = request.POST.get('secondary_image', product.secondary_image)
+            product.flat_lay_image = request.POST.get('flat_lay_image', product.flat_lay_image)
+            product.video_url = request.POST.get('video_url', product.video_url)
+            product.weight = request.POST.get('weight', product.weight)
+            product.transparency = request.POST.get('transparency', product.transparency)
+            product.sheen = request.POST.get('sheen', product.sheen)
+            product.drape_ease = request.POST.get('drape_ease', product.drape_ease)
+            product.featured = 'featured' in request.POST
+            
+            product.save()
+            
+            stock_diff = product.stock - old_stock
+            if stock_diff != 0:
+                InventoryLog.objects.create(
+                    product=product, user=request.user,
+                    quantity_changed=stock_diff,
+                    reason="Product edit - stock adjusted"
+                )
+            
+            return redirect('inventory_dashboard')
+        except Exception as e:
+            return render(request, 'inventory_product_form.html', {
+                'product': product, 'error': str(e), 'is_edit': True,
+                'fabrics': Product.FABRICS, 'styles': Product.STYLES,
+                'transparency_choices': Product.TRANSPARENCY_CHOICES,
+                'sheen_choices': Product.SHEEN_CHOICES,
+                'drape_ease_choices': Product.DRAPE_EASE_CHOICES,
+            })
+    
+    return render(request, 'inventory_product_form.html', {
+        'product': product, 'is_edit': True,
+        'fabrics': Product.FABRICS, 'styles': Product.STYLES,
+        'transparency_choices': Product.TRANSPARENCY_CHOICES,
+        'sheen_choices': Product.SHEEN_CHOICES,
+        'drape_ease_choices': Product.DRAPE_EASE_CHOICES,
+    })
+
+
+@login_required
+def coupon_manager(request):
+    if not check_inventory_staff(request.user):
+        return render(request, '403.html', status=403)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'create':
+            code = request.POST.get('code', '').strip().upper()
+            discount = int(request.POST.get('discount_percentage', 0))
+            if code and 0 < discount <= 100:
+                Coupon.objects.get_or_create(code=code, defaults={'discount_percentage': discount})
+    
+    coupons = Coupon.objects.all().order_by('-active', 'code')
+    return render(request, 'inventory_coupons.html', {'coupons': coupons})
+
+
+@login_required
+def api_coupon_toggle(request):
+    if not check_inventory_staff(request.user):
+        return JsonResponse({'status': 'error'}, status=403)
+    
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        coupon_id = data.get('coupon_id')
+        coupon = get_object_or_404(Coupon, id=coupon_id)
+        coupon.active = not coupon.active
+        coupon.save()
+        return JsonResponse({'status': 'success', 'active': coupon.active})
+    return JsonResponse({'status': 'error'}, status=405)
+
+
+@login_required
+def api_bulk_price(request):
+    if not check_inventory_staff(request.user):
+        return JsonResponse({'status': 'error'}, status=403)
+    
+    if request.method == 'POST':
+        from decimal import Decimal
+        data = json.loads(request.body)
+        product_ids = data.get('product_ids', [])
+        action = data.get('action', '')  # 'increase', 'decrease', 'set_sale'
+        value = Decimal(str(data.get('value', 0)))
+        
+        products = Product.objects.filter(id__in=product_ids)
+        updated = 0
+        
+        for p in products:
+            if action == 'increase':
+                p.price = p.price * (1 + value / 100)
+                p.save()
+                updated += 1
+            elif action == 'decrease':
+                p.price = p.price * (1 - value / 100)
+                p.save()
+                updated += 1
+            elif action == 'set_sale':
+                p.sale_price = p.price * (1 - value / 100)
+                p.save()
+                updated += 1
+            elif action == 'clear_sale':
+                p.sale_price = None
+                p.save()
+                updated += 1
+        
+        return JsonResponse({'status': 'success', 'updated': updated})
+    return JsonResponse({'status': 'error'}, status=405)

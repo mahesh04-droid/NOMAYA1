@@ -13,6 +13,7 @@ class Product(models.Model):
     image=models.URLField(default=""); secondary_image=models.URLField(blank=True, default=""); stock=models.PositiveIntegerField(default=0); featured=models.BooleanField(default=False)
     video_url = models.URLField(blank=True, default="")
     flat_lay_image = models.URLField(blank=True, default="")
+    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Leave blank for no sale. Set a value to show discounted price.")
     
     weight = models.CharField(max_length=50, default="Medium 400g")
     transparency = models.CharField(max_length=20, choices=TRANSPARENCY_CHOICES, default='Opaque')
@@ -21,6 +22,20 @@ class Product(models.Model):
     
     created_at=models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.name
+    
+    @property
+    def display_price(self):
+        return self.sale_price if self.sale_price else self.price
+    
+    @property
+    def is_on_sale(self):
+        return self.sale_price is not None and self.sale_price < self.price
+    
+    @property
+    def discount_percentage(self):
+        if self.is_on_sale:
+            return int(round((1 - self.sale_price / self.price) * 100))
+        return 0
     
     @property
     def average_rating(self):

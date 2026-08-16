@@ -37,5 +37,10 @@ urlpatterns = [
     
     # Inventory Management (Staff & Manager Portal)
     path('inventory/', views.inventory_dashboard, name='inventory_dashboard'),
+    path('inventory/add/', views.product_add, name='product_add'),
+    path('inventory/edit/<int:product_id>/', views.product_edit, name='product_edit'),
+    path('inventory/coupons/', views.coupon_manager, name='coupon_manager'),
     path('api/inventory/update/', views.api_update_stock, name='api_update_stock'),
+    path('api/inventory/coupon-toggle/', views.api_coupon_toggle, name='api_coupon_toggle'),
+    path('api/inventory/bulk-price/', views.api_bulk_price, name='api_bulk_price'),
 ]

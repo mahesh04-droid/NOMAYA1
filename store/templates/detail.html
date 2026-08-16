@@ -67,7 +67,15 @@
         <div class="product-info">
             <span>THE NOMAYA EDIT &middot; {{ product.fabric }}</span>
             <h1>{{ product.name }}</h1>
+            {% if product.is_on_sale %}
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 5px;">
+                <strong class="price" style="color: #282c3f;">₹{{ product.sale_price|floatformat:"0" }}</strong>
+                <span style="text-decoration: line-through; color: #999; font-size: 16px;">₹{{ product.price|floatformat:"0" }}</span>
+                <span style="background: #ff3f6c; color: white; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 700;">{{ product.discount_percentage }}% OFF</span>
+            </div>
+            {% else %}
             <strong class="price">₹{{ product.price|floatformat:"0" }}</strong>
+            {% endif %}
             <p>{{ product.description }}</p>
             
             <hr/>

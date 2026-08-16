@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Coupon & Discount Manager | NOMAYA{% endblock %}
+
+{% block content %}
+<main style="padding: 40px 5vw; max-width: 900px; margin: 0 auto; min-height: 85vh; font-family: 'DM Sans', sans-serif;">
+    <!-- Top Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; margin-bottom: 32px;">
+        <div>
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4f46e5;"></span>
+                Staff Clearance · {{ user.username|default:"Staff" }}
+            </div>
+            <h1 style="font-family: 'Playfair Display', serif; font-size: 2.2rem; margin: 0; color: #1e1e24; font-weight: 600; line-height: 1.2;">Coupon & Discount Manager</h1>
+            <p style="color: #666; margin: 6px 0 0 0; font-size: 14px;">Create, activate, and manage promotional discount coupons for checkout.</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="/inventory/" class="btn outline" style="padding: 10px 18px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px;">
+                &larr; Back to Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Django Messages Feedback -->
+    {% if messages %}
+    <div style="margin-bottom: 24px;">
+        {% for message in messages %}
+        <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; {% if message.tags == 'error' %}background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;{% else %}background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;{% endif %}">
+            <span>{% if message.tags == 'error' %}⚠️{% else %}✓{% endif %}</span>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Create New Coupon Form (Horizontal Card) -->
+    <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 24px 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 32px;">
+        <div style="margin-bottom: 18px;">
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 1.3rem; margin: 0; color: #282c3f; font-weight: 600;">Create New Coupon</h2>
+            <p style="font-size: 13px; color: #777; margin: 4px 0 0 0;">Add a new percentage-based promo code for storewide promotions.</p>
+        </div>
+
+        <form method="POST" action="" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+                <!-- Code Input -->
+                <div style="flex: 2; min-width: 220px;">
+                    <label for="coupon_code" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 6px;">
+                        Coupon Code
+                    </label>
+                    <input type="text" 
+                           id="coupon_code" 
+                           name="code" 
+                           required 
+                           placeholder="e.g. DIWALI25" 
+                           style="width: 100%; padding: 11px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; text-transform: uppercase; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-weight: 600; color: #282c3f; letter-spacing: 0.5px; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+                           oninput="this.value = this.value.toUpperCase();"
+                           onfocus="this.style.borderColor='#4f46e5';"
+                           onblur="this.style.borderColor='#ddd';">
+                </div>
+
+                <!-- Discount Percentage Input -->
+                <div style="flex: 1; min-width: 160px;">
+                    <label for="discount_percentage" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 6px;">
+                        Discount %
+                    </label>
+                    <div style="position: relative;">
+                        <input type="number" 
+                               id="discount_percentage" 
+                               name="discount_percentage" 
+                               min="1" 
+                               max="100" 
+                               required 
+                               placeholder="e.g. 25" 
+                               style="width: 100%; padding: 11px 32px 11px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-weight: 600; color: #282c3f; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='#4f46e5';"
+                               onblur="this.style.borderColor='#ddd';">
+                        <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #888; font-weight: 600; font-size: 14px; pointer-events: none;">%</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="btn" style="padding: 11px 24px; font-size: 13px; font-weight: 600; background: #282c3f; color: white; border-radius: 8px; border: none; cursor: pointer; white-space: nowrap; height: 42px; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create Coupon
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Existing Coupons Card & Table -->
+    <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 40px;">
+        <div style="padding: 20px 24px; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+            <div>
+                <h2 style="font-family: 'Playfair Display', serif; font-size: 1.25rem; margin: 0; color: #1e1e24; font-weight: 600;">Active & Configured Coupons</h2>
+                <p style="font-size: 12px; color: #777; margin: 3px 0 0 0;">Manage coupon statuses in real-time.</p>
+            </div>
+            <span style="font-size: 12px; color: #666; font-weight: 600; background: #eee; padding: 3px 10px; border-radius: 12px;">
+                Total: {{ coupons|length }}
+            </span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 1px solid #eaeaea; color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;">
+                        <th style="padding: 14px 20px;">Code</th>
+                        <th style="padding: 14px 20px;">Discount %</th>
+                        <th style="padding: 14px 20px;">Status</th>
+                        <th style="padding: 14px 20px; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coupon in coupons %}
+                    <tr id="coupon-row-{{ coupon.id }}" style="border-bottom: 1px solid #f0f0f0; transition: background 0.15s ease;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='white'">
+                        <!-- Coupon Code in Monospace Font -->
+                        <td style="padding: 14px 20px;">
+                            <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 13px; font-weight: 700; color: #282c3f; letter-spacing: 0.8px; background: #f3f4f6; padding: 4px 10px; border-radius: 6px; border: 1px solid #e5e7eb; display: inline-block;">
+                                {{ coupon.code }}
+                            </span>
+                        </td>
+
+                        <!-- Discount Percentage -->
+                        <td style="padding: 14px 20px;">
+                            <span style="font-weight: 700; color: #282c3f; font-size: 14px;">
+                                {{ coupon.discount_percentage }}% OFF
+                            </span>
+                        </td>
+
+                        <!-- Status Badge -->
+                        <td style="padding: 14px 20px;">
+                            {% if coupon.active %}
+                            <span style="display: inline-flex; align-items: center; gap: 6px; background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                                Active
+                            </span>
+                            {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 6px; background: #f3f4f6; color: #6b7280; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #9ca3af;"></span>
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions (Toggle Button) -->
+                        <td style="padding: 14px 20px; text-align: right;">
+                            <button type="button" 
+                                    onclick="toggleCoupon({{ coupon.id }}, this)" 
+                                    class="btn" 
+                                    style="padding: 6px 14px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; {% if coupon.active %}background: transparent; color: #dc2626; border: 1px solid #fca5a5;{% else %}background: #282c3f; color: white; border: 1px solid #282c3f;{% endif %}"
+                                    onmouseover="{% if coupon.active %}this.style.background='#fee2e2'{% else %}this.style.background='#4f46e5'; this.style.borderColor='#4f46e5'{% endif %}"
+                                    onmouseout="{% if coupon.active %}this.style.background='transparent'{% else %}this.style.background='#282c3f'; this.style.borderColor='#282c3f'{% endif %}">
+                                {% if coupon.active %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="padding: 45px 20px; text-align: center; color: #888;">
+                            <div style="font-size: 15px; font-weight: 600; color: #444; margin-bottom: 4px;">No coupons found</div>
+                            <p style="font-size: 13px; color: #888; margin: 0;">Use the form above to generate your first discount coupon code.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+function toggleCoupon(couponId, btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    fetch('/api/inventory/coupon-toggle/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json'},
+        body: JSON.stringify({coupon_id: couponId})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to update coupon status');
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    })
+    .catch(err => {
+        console.error('Error toggling coupon:', err);
+        alert('Network error while updating coupon status');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    });
+}
+
+function getCsrf() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '{{ csrf_token }}';
+}
+</script>
+{% endblock %}

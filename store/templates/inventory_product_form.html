@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit Product: {{ product.name }}{% else %}Add New Product{% endif %} | NOMAYA Staff Portal{% endblock %}
+
+{% block content %}
+<style>
+    .product-form-container {
+        padding: 40px 5vw 80px;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: 85vh;
+    }
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        padding: 36px 40px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .form-section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #282c3f;
+        margin: 0 0 4px 0;
+    }
+    .form-section-desc {
+        font-size: 13px;
+        color: #777;
+        margin: 0 0 20px 0;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .form-label .required-star {
+        color: #dc2626;
+        margin-left: 2px;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #282c3f;
+        background-color: #fff;
+        box-sizing: border-box;
+        font-family: inherit;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+    .form-hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: 6px;
+    }
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 18px;
+    }
+    .form-hr {
+        border: 0;
+        border-top: 1px solid #eaeaea;
+        margin: 28px 0;
+    }
+    .checkbox-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 18px;
+        background: #fafafa;
+        border: 1px solid #eaeaea;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    .checkbox-container:hover {
+        background: #f4f4f6;
+        border-color: #d1d5db;
+    }
+    .checkbox-container input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: #4f46e5;
+        cursor: pointer;
+    }
+    @media (max-width: 640px) {
+        .form-card {
+            padding: 24px 18px;
+        }
+        .form-grid-2,
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
+
+<main class="product-form-container">
+    {% if is_inventory_staff %}
+    <!-- Top Header & Navigation -->
+    <div style="max-width: 800px; margin: 0 auto 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4f46e5;"></span>
+                    Staff Portal · {{ user.username }}
+                </div>
+                <h1 style="font-family: 'Playfair Display', serif; font-size: 2.2rem; margin: 0; color: #1e1e24;">
+                    {% if is_edit %}Edit Product: {{ product.name }}{% else %}Add New Product{% endif %}
+                </h1>
+                <p style="color: #666; margin: 6px 0 0 0; font-size: 14px;">
+                    {% if is_edit %}Update product specifications, inventory quotas, and imagery.{% else %}Publish a new artisanal saree to the live NOMAYA catalog.{% endif %}
+                </p>
+            </div>
+            <div>
+                <a href="/inventory/" class="btn outline" style="padding: 10px 18px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 6px;">
+                    &larr; Back to Inventory
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Form Card -->
+    <div class="form-card">
+        <form method="POST" action="">
+            {% csrf_token %}
+
+            <!-- 1. Basic Details -->
+            <div>
+                <h2 class="form-section-title">1. Basic Details</h2>
+                <p class="form-section-desc">Artisan product title, permanent URL slug, and storytelling description.</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-name">Product Name <span class="required-star">*</span></label>
+                    <input type="text" id="id-name" name="name" class="form-input" placeholder="e.g. Royal Neelambari Chanderi Silk Saree" required {% if is_edit %}value="{{ product.name }}"{% endif %}>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-slug">Product Slug <span class="required-star">*</span></label>
+                    <input type="text" id="id-slug" name="slug" class="form-input" placeholder="e.g. royal-neelambari-chanderi-silk-saree" required {% if is_edit %}value="{{ product.slug }}"{% endif %}>
+                    <input type="hidden" id="slug-edited-flag" value="{% if is_edit %}1{% endif %}">
+                    <div class="form-hint">Auto-generated from title. Must be unique and URL-friendly.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-description">Description <span class="required-star">*</span></label>
+                    <textarea id="id-description" name="description" class="form-textarea" rows="4" placeholder="Detail the weave origin, artisan craftsmanship, tactile handfeel, and occasion pairing..." required style="resize: vertical; min-height: 110px;">{% if is_edit %}{{ product.description }}{% endif %}</textarea>
+                </div>
+            </div>
+
+            <hr class="form-hr">
+
+            <!-- 2. Classification -->
+            <div>
+                <h2 class="form-section-title">2. Classification</h2>
+                <p class="form-section-desc">Categorize for catalog filtering, drape recommendations, and navigation.</p>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label class="form-label" for="id-fabric">Fabric <span class="required-star">*</span></label>
+                        <select id="id-fabric" name="fabric" class="form-select" required>
+                            <option value="" disabled {% if not is_edit %}selected{% endif %}>Select Fabric</option>
+                            {% for key, val in fabrics %}
+                            <option value="{{ key }}" {% if is_edit and product.fabric == key %}selected{% elif product.fabric == key %}selected{% endif %}>{{ val }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id-color">Color <span class="required-star">*</span></label>
+                        <input type="text" id="id-color" name="color" class="form-input" placeholder="e.g. Indigo Blue, Sage" required {% if is_edit %}value="{{ product.color }}"{% endif %}>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id-style">Draping Style <span class="required-star">*</span></label>
+                        <select id="id-style" name="style" class="form-select" required>
+                            <option value="" disabled {% if not is_edit %}selected{% endif %}>Select Style</option>
+                            {% for key, val in styles %}
+                            <option value="{{ key }}" {% if is_edit and product.style == key %}selected{% elif product.style == key %}selected{% endif %}>{{ val }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="form-hr">
+
+            <!-- 3. Pricing & Inventory -->
+            <div>
+                <h2 class="form-section-title">3. Pricing &amp; Stock</h2>
+                <p class="form-section-desc">Set retail price, optional promotional discount, and available warehouse units.</p>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label class="form-label" for="id-price">Regular Price (₹) <span class="required-star">*</span></label>
+                        <input type="number" id="id-price" name="price" class="form-input" placeholder="4990.00" step="0.01" min="0" required {% if is_edit %}value="{{ product.price }}"{% endif %}>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id-sale_price">Sale Price (₹) — leave blank for no sale</label>
+                        <input type="number" id="id-sale_price" name="sale_price" class="form-input" placeholder="Leave blank" step="0.01" min="0" {% if is_edit and product.sale_price %}value="{{ product.sale_price }}"{% endif %}>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id-stock">Stock <span class="required-star">*</span></label>
+                        <input type="number" id="id-stock" name="stock" class="form-input" placeholder="10" min="0" required value="{% if is_edit %}{{ product.stock }}{% else %}0{% endif %}">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="form-hr">
+
+            <!-- 4. Media URLs -->
+            <div>
+                <h2 class="form-section-title">4. Media Assets</h2>
+                <p class="form-section-desc">Product photography, detail close-ups, and interactive movement video.</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-image">Main Product Image URL <span class="required-star">*</span></label>
+                    <input type="url" id="id-image" name="image" class="form-input" placeholder="https://images.unsplash.com/photo-..." required {% if is_edit %}value="{{ product.image }}"{% endif %}>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-secondary_image">Secondary Image URL</label>
+                    <input type="url" id="id-secondary_image" name="secondary_image" class="form-input" placeholder="https://images.unsplash.com/photo-..." {% if is_edit %}value="{{ product.secondary_image }}"{% endif %}>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-flat_lay_image">Flat Lay / Weave Close-up URL</label>
+                    <input type="url" id="id-flat_lay_image" name="flat_lay_image" class="form-input" placeholder="https://images.unsplash.com/photo-..." {% if is_edit %}value="{{ product.flat_lay_image }}"{% endif %}>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id-video_url">Drape Movement Video URL</label>
+                    <input type="url" id="id-video_url" name="video_url" class="form-input" placeholder="https://assets.mixkit.co/videos/..." {% if is_edit %}value="{{ product.video_url }}"{% endif %}>
+                </div>
+            </div>
+
+            <hr class="form-hr">
+
+            <!-- 5. Sensory Metrics -->
+            <div>
+                <h2 class="form-section-title">5. Sensory Metrics</h2>
+                <p class="form-section-desc">Tactile dimensions powering the Drape Finder and virtual draping engine.</p>
+
+                <div class="form-grid-2" style="margin-bottom: 18px;">
+                    <div class="form-group">
+                        <label class="form-label" for="id-weight">Weight</label>
+                        <input type="text" id="id-weight" name="weight" class="form-input" placeholder="Medium 400g" value="{% if is_edit %}{{ product.weight }}{% else %}Medium 400g{% endif %}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id-transparency">Transparency</label>
+                        <select id="id-transparency" name="transparency" class="form-select">
+                            {% for key, val in transparency_choices %}
+                            <option value="{{ key }}" {% if is_edit and product.transparency == key %}selected{% elif not is_edit and key == 'Opaque' %}selected{% endif %}>{{ val }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="id-sheen">Sheen</label>
+                        <select id="id-sheen" name="sheen" class="form-select">
+                            {% for key, val in sheen_choices %}
+                            <option value="{{ key }}" {% if is_edit and product.sheen == key %}selected{% elif not is_edit and key == 'Matte' %}selected{% endif %}>{{ val }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id-drape_ease">Drape Ease</label>
+                        <select id="id-drape_ease" name="drape_ease" class="form-select">
+                            {% for key, val in drape_ease_choices %}
+                            <option value="{{ key }}" {% if is_edit and product.drape_ease == key %}selected{% elif not is_edit and key == 'Easy' %}selected{% endif %}>{{ val }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="form-hr">
+
+            <!-- 6. Options -->
+            <div>
+                <h2 class="form-section-title">6. Options</h2>
+                <p class="form-section-desc">Visibility flags and homepage curation.</p>
+
+                <label class="checkbox-container" for="id-featured">
+                    <input type="checkbox" id="id-featured" name="featured" {% if is_edit and product.featured %}checked{% endif %}>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px; color: #282c3f;">Mark as Featured (shows on homepage)</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 3px;">Featured sarees are prominently showcased on the home page curated collection grid.</div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Form Submission Actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 35px; padding-top: 25px; border-top: 1px solid #eaeaea; flex-wrap: wrap;">
+                <a href="/inventory/" class="btn outline" style="padding: 12px 22px; font-size: 13px; text-decoration: none; border-radius: 6px;">
+                    Discard &amp; Back
+                </a>
+                <button type="submit" class="btn" style="padding: 13px 32px; font-size: 14px; font-weight: 600; background: #282c3f; color: #ffffff; border-radius: 8px; cursor: pointer; border: none; box-shadow: 0 4px 14px rgba(40, 44, 63, 0.25);">
+                    {% if is_edit %}Save Changes{% else %}Create Product{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% else %}
+    <!-- Unauthorized Clearance Notice -->
+    <div style="max-width: 600px; margin: 80px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; border: 1px solid #eaeaea; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+        <div style="font-size: 40px; margin-bottom: 15px;">🔒</div>
+        <h2 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #1e1e24; margin: 0 0 10px 0;">Staff Clearance Required</h2>
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">You need verified Inventory Staff permissions to add or edit catalog products.</p>
+        <a href="{% url 'home' %}" class="btn" style="padding: 12px 24px; font-size: 13px; background: #282c3f; text-decoration: none;">Return to Storefront</a>
+    </div>
+    {% endif %}
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var nameInput = document.getElementById('id-name');
+    var slugInput = document.getElementById('id-slug');
+    var slugFlag = document.getElementById('slug-edited-flag');
+
+    if (nameInput && slugInput) {
+        nameInput.addEventListener('input', function() {
+            if (!slugFlag || !slugFlag.value) {
+                slugInput.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            }
+        });
+
+        slugInput.addEventListener('input', function() {
+            if (slugFlag) {
+                slugFlag.value = '1';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
